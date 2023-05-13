@@ -1,0 +1,175 @@
+##############################################################################################
+Aim: TMB harmonization 
+
+To harmonize TMB values in DFCI and Shim et al. cohorts (NSCLC samples) to MSK TMB values using normal transformation (power transformations) followed by standardization to Z-scores.
+##############################################################################################
+
+# load required package
+```{r}
+library(rcompanion)
+
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+
+```
+
+
+# load data 
+```{r}
+selected_cols = c('CancerType','TMB_original')
+Chowell1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+Chowell1_info_df = Chowell1_info_df[selected_cols]
+Chowell2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+Chowell2_info_df = Chowell2_info_df[selected_cols]
+MSK1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+MSK1_info_df = MSK1_info_df[selected_cols]
+MSK_info_df = rbind(Chowell1_info_df,Chowell2_info_df,MSK1_info_df)
+MSK_info_df = MSK_info_df[MSK_info_df$CancerType=='NSCLC',]
+#MSK_info_df$TMB <- ifelse(MSK_info_df$TMB > 50, 50, MSK_info_df$TMB)
+
+DFCI1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Awad_NSCLC1")
+DFCI2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Awad_NSCLC2")
+DFCI3_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Awad_NSCLC3")
+DFCI_info_df = rbind(DFCI1_info_df,DFCI2_info_df,DFCI3_info_df)
+DFCI_info_df = DFCI_info_df[selected_cols]
+#DFCI_info_df$TMB <- ifelse(DFCI_info_df$TMB > 50, 50, DFCI_info_df$TMB)
+
+Lee_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Lee_NSCLC")
+Lee_info_df = Lee_info_df[selected_cols]
+#Lee_info_df$TMB <- ifelse(Lee_info_df$TMB > 1500, 1500, Lee_info_df$TMB)
+
+colnames(MSK_info_df)=c('CancerType','TMB')
+colnames(DFCI_info_df)=c('CancerType','TMB')
+colnames(Lee_info_df)=c('CancerType','TMB')
+
+
+```
+
+
+# TMB harmonization
+```{r}
+# identify the optimal transformation coefficient for normal transformation (power transformations)
+# MSK
+# get the normalized TMB for validation of transformation coefficient extraction
+transformed_TMB = transformTukey(MSK_info_df$TMB, plotit=FALSE)
+scaled_TMB_MSK <- scale(transformed_TMB)
+# extract transformation coefficients
+lambda_MSK = transformTukey(MSK_info_df$TMB, plotit=TRUE, returnLambda = TRUE)
+print(paste('Lambda_MSK: ', lambda_MSK))
+mean_TMB_MSK <- attr(scaled_TMB_MSK, "scaled:center")
+std_TMB_MSK <- attr(scaled_TMB_MSK, "scaled:scale")
+scaled_TMB2_MSK = (MSK_info_df$TMB ^ lambda_MSK - mean_TMB_MSK) / std_TMB_MSK
+print(sum(scaled_TMB2_MSK == scaled_TMB_MSK)==length(scaled_TMB2_MSK))
+# harmonize TMB to MSK levels
+harmonized_TMB_MSK = (scaled_TMB2_MSK*std_TMB_MSK + mean_TMB_MSK)^(1/lambda_MSK)
+
+# DFCI
+# get the normalized TMB for validation of transformation coefficient extraction
+transformed_TMB = transformTukey(DFCI_info_df$TMB, plotit=FALSE)
+scaled_TMB_DFCI <- scale(transformed_TMB)
+# extract transformation coefficients
+lambda_DFCI = transformTukey(DFCI_info_df$TMB, plotit=TRUE, returnLambda = TRUE)
+print(paste('Lambda_DFCI: ', lambda_DFCI))
+mean_TMB_DFCI <- attr(scaled_TMB_DFCI, "scaled:center")
+std_TMB_DFCI <- attr(scaled_TMB_DFCI, "scaled:scale")
+scaled_TMB2_DFCI = (DFCI_info_df$TMB ^ lambda_DFCI - mean_TMB_DFCI) / std_TMB_DFCI
+print(sum(scaled_TMB2_DFCI == scaled_TMB_DFCI)==length(scaled_TMB2_DFCI))
+# harmonize TMB to MSK levels
+temp_TMB = scaled_TMB2_DFCI*std_TMB_MSK + mean_TMB_MSK
+temp_TMB <- ifelse(temp_TMB < 0, 0, temp_TMB)
+harmonized_TMB_DFCI = (temp_TMB)^(1/lambda_MSK)
+
+DFCI_info_df['TMB_harmonized'] = harmonized_TMB_DFCI
+write.csv(DFCI_info_df, paste0(result_dir,"DFCI_TMB_harmonized.csv"))
+
+# Lee
+# get the normalized TMB for validation of transformation coefficient extraction
+transformed_TMB = transformTukey(Lee_info_df$TMB, plotit=FALSE)
+scaled_TMB_Lee <- scale(transformed_TMB)
+# extract transformation coefficients
+lambda_Lee = transformTukey(Lee_info_df$TMB, plotit=TRUE, returnLambda = TRUE)
+print(paste('Lambda_Lee: ', lambda_Lee))
+mean_TMB_Lee <- attr(scaled_TMB_Lee, "scaled:center")
+std_TMB_Lee <- attr(scaled_TMB_Lee, "scaled:scale")
+scaled_TMB2_Lee = (Lee_info_df$TMB ^ lambda_Lee - mean_TMB_Lee) / std_TMB_Lee
+print(sum(scaled_TMB2_Lee == scaled_TMB_Lee)==length(scaled_TMB2_Lee))
+# harmonize TMB to MSK levels
+temp_TMB = scaled_TMB2_Lee*std_TMB_MSK + mean_TMB_MSK
+temp_TMB <- ifelse(temp_TMB < 0, 0, temp_TMB)
+harmonized_TMB_Lee = (temp_TMB)^(1/lambda_MSK)
+
+Lee_info_df['TMB_harmonized'] = harmonized_TMB_Lee
+write.csv(Lee_info_df, paste0(result_dir,"Lee_TMB_harmonized.csv"))
+
+```
+
+# plot hist of data before and after harmonization
+```{r}
+##### before harmonization
+data1 <- MSK_info_df$TMB
+data2 <- DFCI_info_df$TMB
+data3 <- Lee_info_df$TMB/20
+
+pdf(paste0(result_dir,"TMB_before_harmonization.pdf"), width = 6.5*2.3/3, height = 4.5*2.3/3, onefile = F)
+xrange <- c(0,50)
+step_size <- 1
+# plot histogram of first data set
+range_data <- range(data1)
+num_breaks <- ceiling(diff(range_data) / step_size)
+breaks_seq <- seq(range_data[1], range_data[2], by = step_size)
+breaks_seq = c(breaks_seq, breaks_seq[length(breaks_seq)]+step_size)
+hist(data1, xlim = xrange, ylim = c(0,0.12), col = rgb(1,0,0,0.9), border=NA, breaks = breaks_seq, freq = FALSE, main = "Histogram of TMB before harmonization", xlab = 'TMB', ylab = 'Density')
+# add histogram of second data set
+range_data <- range(na.omit(data2))
+num_breaks <- ceiling(diff(range_data) / step_size)
+breaks_seq <- seq(range_data[1], range_data[2], by = step_size)
+breaks_seq = c(breaks_seq, breaks_seq[length(breaks_seq)]+step_size)
+hist(data2, xlim = xrange, ylim = c(0,0.1), col = rgb(0,1,0,0.5), border=NA, breaks = breaks_seq, freq = FALSE, add = TRUE)
+# add histogram of third data set
+range_data <- range(na.omit(data3))
+num_breaks <- ceiling(diff(range_data) / step_size)
+breaks_seq <- seq(range_data[1], range_data[2], by = step_size)
+breaks_seq = c(breaks_seq, breaks_seq[length(breaks_seq)]+step_size)
+hist(data3, xlim = xrange, ylim = c(0,0.1), col = rgb(0,0,0,0.1), border=rgb(0,0,0,0.5), breaks = breaks_seq, freq = FALSE, add = TRUE)
+# add legend
+legend("topright", legend = c("Chowell et al. & MSK1", "DFCI", "Shim et al. (TMB/20)"), fill = c(rgb(1,0,0,0.9), rgb(0,1,0,0.5), rgb(0,0,0,0.1)), border=c(NA, NA, rgb(0,0,0,0.5)))
+dev.off()
+
+
+
+# after harmonization
+data1 <- harmonized_TMB_MSK
+data2 <- harmonized_TMB_DFCI
+data3 <- harmonized_TMB_Lee
+
+pdf(paste0(result_dir,"TMB_after_harmonization.pdf"), width = 6.5*2.3/3, height = 4.5*2.3/3, onefile = F)
+xrange <- c(0,50)
+step_size <- 1
+# plot histogram of first data set
+range_data <- range(data1)
+num_breaks <- ceiling(diff(range_data) / step_size)
+breaks_seq <- seq(range_data[1], range_data[2], by = step_size)
+breaks_seq = c(breaks_seq, breaks_seq[length(breaks_seq)]+step_size)
+hist(data1, xlim = xrange, ylim = c(0,0.12), col = rgb(1,0,0,0.9), border=NA, breaks = breaks_seq, freq = FALSE, main = "Histogram of TMB after harmonization", xlab = 'TMB (Mut/Mb)', ylab = 'Density')
+# add histogram of second data set
+range_data <- range(na.omit(data2))
+num_breaks <- ceiling(diff(range_data) / step_size)
+breaks_seq <- seq(range_data[1], range_data[2], by = step_size)
+breaks_seq = c(breaks_seq, breaks_seq[length(breaks_seq)]+step_size)
+hist(data2, xlim = xrange, ylim = c(0,0.1), col = rgb(0,1,0,0.5), border=NA, breaks = breaks_seq, freq = FALSE, add = TRUE)
+# add histogram of third data set
+range_data <- range(na.omit(data3))
+num_breaks <- ceiling(diff(range_data) / step_size)
+breaks_seq <- seq(range_data[1], range_data[2], by = step_size)
+breaks_seq = c(breaks_seq, breaks_seq[length(breaks_seq)]+step_size)
+hist(data3, xlim = xrange, ylim = c(0,0.1), col = rgb(0,0,0,0.1), border=rgb(0,0,0,0.5), breaks = breaks_seq, freq = FALSE, add = TRUE)
+# add legend
+legend("topright", legend = c("Chowell et al. & MSK1", "DFCI", "Shim et al."), fill = c(rgb(1,0,0,0.9), rgb(0,1,0,0.5), rgb(0,0,0,0.1)), border=c(NA, NA, rgb(0,0,0,0.5)))
+dev.off()
+
+```
+

@@ -1,0 +1,166 @@
+###############################################################################################
+Aim: Characteristics of patients in the study
+
+To make a table showing statistics of patient's characteristics in the study.
+###############################################################################################
+
+# load required package
+```{r}
+library(data.table)
+
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+
+```
+
+
+# load data 
+```{r}
+selected_cols = c('TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'CancerType', 'NLR', 'Age', 'Drug', 'Sex', 'Response')
+
+Chowell1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+Chowell1_info_df = Chowell1_info_df[selected_cols]
+Chowell2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+Chowell2_info_df = Chowell2_info_df[selected_cols]
+Chowell_info_df = rbind(Chowell1_info_df,Chowell2_info_df)
+Chowell_info_df$cohort = 'Chowell'
+
+MSK1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+MSK1_info_df = MSK1_info_df[selected_cols]
+MSK1_info_df$cohort = 'MSK1'
+
+MSK2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new2")
+MSK2_info_df = MSK2_info_df[selected_cols]
+MSK2_info_df$cohort = 'MSK2'
+
+DFCI1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Awad_NSCLC1")
+DFCI2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Awad_NSCLC2")
+DFCI3_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Awad_NSCLC3")
+DFCI_info_df = rbind(DFCI1_info_df,DFCI2_info_df,DFCI3_info_df)
+DFCI_info_df = DFCI_info_df[selected_cols]
+DFCI_info_df$cohort = 'DFCI'
+
+Shim_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Lee_NSCLC")
+Shim_info_df = Shim_info_df[selected_cols]
+Shim_info_df$cohort = 'Shim'
+
+Kato_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Kurzrock_panCancer")
+Kato_info_df = Kato_info_df[selected_cols]
+Kato_info_df$cohort = 'Kato'
+
+allCohorts_info_df = rbind(Chowell_info_df,MSK1_info_df,MSK2_info_df,DFCI_info_df,Shim_info_df,Kato_info_df)
+```
+
+# stats of patients' characteristics
+```{r}
+################################ all cohorts ################################
+# Sex
+sex_table=table(allCohorts_info_df$Sex) # F: 46.2%, M: 53.8%
+print(sex_table)
+print(sex_table/sum(sex_table))
+
+# Age
+quantile(allCohorts_info_df$Age, c(0.25,0.5,0.75))
+
+# Cancer type
+# freq_ct = table(allCohorts_info_df$CancerType)
+# freq_ct_sorted <- sort(freq_ct, decreasing = TRUE)
+# freq_ct_sorted2 = freq_ct_sorted/sum(freq_ct_sorted)*100
+ct = allCohorts_info_df$CancerType
+ct_order <- c("NSCLC", "Renal", "Melanoma", "Head & Neck", "Bladder", "Sarcoma", "Gastric", "CNS", "Colorectal", "Endometrial", "Hepatobiliary", "SCLC", "Esophageal", "Pancreatic", "Mesothelioma", "Ovarian", "Breast", "Unknown primary")
+ctfactor <- factor(ct, levels = ct_order)
+mytable <- table(ctfactor)
+print(mytable)
+print(mytable/sum(mytable)*100)
+
+# Drug
+freq_drug = table(allCohorts_info_df$Drug)
+freq_drug2 = freq_drug/sum(freq_drug)*100
+print(paste(freq_drug))
+print(paste(freq_drug2))
+
+# Response
+freq_R = table(allCohorts_info_df$Response)
+freq_R2 = freq_R/sum(freq_R)*100
+print(paste(freq_R))
+print(paste(freq_R2))
+
+# Chemotherapy history
+freq_Chemo = table(allCohorts_info_df$Chemo_before_IO)
+freq_Chemo2 = freq_Chemo/sum(freq_Chemo)*100
+print(paste(freq_Chemo))
+print(paste(freq_Chemo2))
+
+# TMB
+quantile(na.omit(allCohorts_info_df$TMB), c(0.25,0.5,0.75))
+
+# PDL1 TPS
+quantile(na.omit(allCohorts_info_df$`PDL1_TPS(%)`), c(0.25,0.5,0.75))
+
+# Albumin
+quantile(na.omit(allCohorts_info_df$Albumin), c(0.25,0.5,0.75))
+
+# NLR
+quantile(na.omit(allCohorts_info_df$NLR), c(0.25,0.5,0.75))
+
+
+
+
+################# Chowell/DFCI/MSK1/MSK2/Shim/Kato et al. cohort #################
+Cohort_info_df = allCohorts_info_df[allCohorts_info_df['cohort']=='MSK1',]
+# Sex
+sex_table=table(Cohort_info_df$Sex) # F: 46.2%, M: 53.8%
+print(sex_table)
+print(sex_table/sum(sex_table))
+
+# Age
+quantile(Cohort_info_df$Age, c(0.25,0.5,0.75))
+
+# Cancer type
+# freq_ct = table(Cohort_info_df$CancerType)
+# freq_ct_sorted <- sort(freq_ct, decreasing = TRUE)
+# freq_ct_sorted2 = freq_ct_sorted/sum(freq_ct_sorted)*100
+ct = Cohort_info_df$CancerType
+ct_order <- c("NSCLC", "Renal", "Melanoma", "Head & Neck", "Bladder", "Sarcoma", "Gastric", "CNS", "Colorectal", "Endometrial", "Hepatobiliary", "SCLC", "Esophageal", "Pancreatic", "Mesothelioma", "Ovarian", "Breast", "Unknown primary")
+ctfactor <- factor(ct, levels = ct_order)
+mytable <- table(ctfactor)
+print(mytable)
+print(mytable/sum(mytable)*100)
+
+# Drug
+freq_drug = table(Cohort_info_df$Drug)
+freq_drug2 = freq_drug/sum(freq_drug)*100
+print(paste(freq_drug))
+print(paste(freq_drug2))
+
+# Response
+freq_R = table(Cohort_info_df$Response)
+freq_R2 = freq_R/sum(freq_R)*100
+print(paste(freq_R))
+print(paste(freq_R2))
+
+# Chemotherapy history
+freq_Chemo = table(Cohort_info_df$Chemo_before_IO)
+freq_Chemo2 = freq_Chemo/sum(freq_Chemo)*100
+print(paste(freq_Chemo))
+print(paste(freq_Chemo2))
+
+# TMB
+quantile(na.omit(Cohort_info_df$TMB), c(0.25,0.5,0.75))
+
+# PDL1 TPS
+quantile(na.omit(Cohort_info_df$`PDL1_TPS(%)`), c(0.25,0.5,0.75))
+
+# Albumin
+quantile(na.omit(Cohort_info_df$Albumin), c(0.25,0.5,0.75))
+
+# NLR
+quantile(na.omit(Cohort_info_df$NLR), c(0.25,0.5,0.75))
+
+
+```
+

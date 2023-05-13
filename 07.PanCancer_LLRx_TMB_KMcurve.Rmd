@@ -1,0 +1,514 @@
+
+# load required package
+```{r}
+library(data.table)
+library(tidyverse)
+library(survminer)
+library(survival)
+library(ggridges)
+library(qvalue)
+library(readxl)
+library(verification)
+library(pROC)
+library(forestplot)
+```
+
+# set the color scale
+```{r}
+my.cols <- c("#7CD5C8FF", "#507D41FF", "#DF8F44FF", "#6A6599FF", "#CB7C77FF", "#6B42C8FF",
+             "#C9D73DFF", "#C555CBFF", "#AED688FF", "#502E71FF", "#C49A3FFF",
+             "#42B540FF", "#0099B4FF", "#925E9FFF", 
+             "#FDAF91FF", "#AD002AFF", "#00468BFF", "#ED0000FF",
+             "#6A7DC9FF", "#D7652DFF", 
+             "#CF4C8BFF", "#5D8D9CFF", "#722E41FF", "#C8B693FF", "#C5383CFF", "#79AF97FF", "#68D359FF")
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+
+LLRmodelNA = 'LLR5noChemo' # 'LLR6'  'LLR5noTMB'   'LLR5noChemo'
+
+if (LLRmodelNA=='LLR6'){
+  absoluteCutoff = 0.5
+}else if (LLRmodelNA=='LLR5noTMB'){
+  absoluteCutoff = 0.53
+}else if (LLRmodelNA=='LLR5noChemo'){
+  absoluteCutoff = 0.51
+}
+
+```
+
+# load data 
+```{r}
+# train_LLRscore_df = read_excel(paste0(result_dir,'PanCancer_', LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "0", col_names = TRUE)
+# train_RF6score_df = read_excel(paste0(result_dir,'PanCancer_', 'RF6_Scaler(None)_prediction.xlsx'), "0", col_names = TRUE)
+# train_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+# train_info_df = train_info_df[selected_cols]
+# train_info_df = merge(x = train_info_df, y = train_LLRscore_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+# train_info_df = merge(x = train_info_df, y = train_RF6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+# colnames(train_info_df) = c(renamed_cols, c("LLRscore","RF6score"))
+
+
+test1_LLRscore_df = read_excel(paste0(result_dir,'PanCancer_', LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "1", col_names = TRUE)
+test2_LLRscore_df = read_excel(paste0(result_dir,'PanCancer_', LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "2")
+test1_RF6score_df = read_excel(paste0(result_dir,'PanCancer_', 'RF6_Scaler(None)_prediction.xlsx'), "1")
+test2_RF6score_df = read_excel(paste0(result_dir,'PanCancer_', 'RF6_Scaler(None)_prediction.xlsx'), "2")
+LLRscore_df = rbind(test1_LLRscore_df,test2_LLRscore_df)
+RF6score_df = rbind(test1_RF6score_df,test2_RF6score_df)
+
+selected_cols = c("SAMPLE_ID","Year of ICI treatment start", "TMB", "Chemo_before_IO", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
+test1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+test1_info_df = test1_info_df[selected_cols]
+test2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+test2_info_df = test2_info_df[selected_cols]
+renamed_cols = c("SAMPLE_ID","Year_IO", "TMB", "Chemo_before_IO", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
+
+info_df = rbind(test1_info_df,test2_info_df)
+info_df = merge(x = info_df, y = LLRscore_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+info_df = merge(x = info_df, y = RF6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+colnames(info_df) = c(renamed_cols, c("LLRscore","RF6score"))
+
+CancerTypes = unique(info_df$CancerType)
+
+```
+
+
+# Pan-cancer K-M PFS curves of LLRscorehigh-TMBhigh VS LLRscorehigh-TMBlow VS...
+```{r}
+cutoffType = 'AbsoluteCutoff' # 'AbsoluteCutoff'  'PercentileCutoff'
+
+if (cutoffType == 'AbsoluteCutoff'){
+  info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLRscore_01 = ifelse(LLRscore >= absoluteCutoff, "high", "low"),
+         RF6score_01 = ifelse(RF6score >= 0.27, "high", "low"),
+         TMB_01 = ifelse(TMB >= 10, "high", "low"),
+         )
+}else{
+  info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLRscore_01 = ifelse(LLRscore >= quantile(LLRscore, 0.5), "high", "low"),
+         RF6score_01 = ifelse(RF6score >= quantile(RF6score, 0.6), "high", "low"),
+         TMB_01 = ifelse(TMB >= quantile(TMB, 0.8), "high", "low"),
+         )
+}
+
+plot_df <- info_df %>%
+  group_by(CancerType) %>% 
+      mutate(LLR6_TMB_group = paste0(LLRscore_01, " LLRscore, ", TMB_01, " TMB"))
+
+
+pdf(paste0(result_dir,"PanCancer_",LLRmodelNA,"_TMB_PFScurve_",cutoffType,".pdf"), width = 5*0.8, height = 3.9*0.8, onefile = F) 
+ggsurvplot(survfit(Surv(PFS_Months, PFS_Event) ~ LLR6_TMB_group, data = plot_df), pval = F, risk.table = F, # risk.table = T,
+         palette = c("#9B2226","#001219", "#CA6702", "#005F73"),
+         risk.table.height = 0.3, xlab = 'Time (months)', ylab = 'PFS probability',
+         legend = c(0.35, 1.1),
+         legend.text = element_text(size = 7, color = "black"),
+         legend.labs = c("LORIS-H/TMB-H", "LORIS-H/TMB-L", "LORIS-L/TMB-H", "LORIS-L/TMB-L"),
+         ggtheme = theme(legend.background = element_rect(fill = NA, color=NA),legend.key = element_rect(fill = NA, color=NA),
+                         plot.margin = unit(c(1.5, 0.2, 0.2, 0.2),"cm"),
+                         panel.background = element_rect(fill = "white"),
+                         panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                         panel.border = element_blank(),axis.line = element_line(colour = "black"),
+                         axis.text.x = element_text(colour="black"),axis.text.y = element_text(colour="black")),  # top, right, bot, left
+        pval.method = T, tables.y.text = F) +
+guides(color=guide_legend(ncol =1)) +
+labs(color = "")
+dev.off()
+
+##### HR and p-value comparison
+cancerData=data.frame(info_df$LLRscore_01,info_df$PFS_Months,info_df$PFS_Event)
+colnames(cancerData) = c("Score", "PFS_Months", "PFS_Event")
+sfit = survfit(Surv(PFS_Months,PFS_Event) ~ Score, data=cancerData)
+scox = coxph(Surv(PFS_Months,PFS_Event) ~ Score, data=cancerData)
+scox_coef = summary(scox)$coefficients
+HR_value = scox_coef[2] # hazard ratio
+Z_value=scox_coef[4]
+P_value=scox_coef[5]
+HR_CI = exp(confint(scox))
+print(paste(c('LLR6 PFS: ', P_value,HR_value), collapse= " "))
+
+cancerData=data.frame(info_df$TMB_01,info_df$PFS_Months,info_df$PFS_Event)
+colnames(cancerData) = c("Score", "PFS_Months", "PFS_Event")
+sfit = survfit(Surv(PFS_Months,PFS_Event) ~ Score, data=cancerData)
+scox = coxph(Surv(PFS_Months,PFS_Event) ~ Score, data=cancerData)
+scox_coef = summary(scox)$coefficients
+HR_value = scox_coef[2] # hazard ratio
+Z_value=scox_coef[4]
+P_value=scox_coef[5]
+HR_CI = exp(confint(scox))
+print(paste(c('TMB PFS: ', P_value,HR_value), collapse= " "))
+
+##### p values between 4 different groups
+plot_df_temp = plot_df[plot_df$LLR6_TMB_group=='high LLRscore, high TMB' | plot_df$LLR6_TMB_group=='high LLRscore, low TMB', ]
+scox = coxph(Surv(plot_df_temp$PFS_Months,plot_df_temp$PFS_Event)~LLR6_TMB_group, data=plot_df_temp)
+scox_coef = summary(scox)$coefficients
+HR_value = scox_coef[2] # hazard ratio
+Z_value=scox_coef[4]
+P_value=scox_coef[5]
+print(paste(c(P_value,HR_value), collapse= " "))
+
+```
+
+
+# Pan-cancer K-M OS curves of LLRscorehigh-TMBhigh VS LLRscorehigh-TMBlow VS...
+```{r}
+cutoffType = 'AbsoluteCutoff' # 'AbsoluteCutoff'  'PercentileCutoff'
+
+if (cutoffType == 'AbsoluteCutoff'){
+  info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLRscore_01 = ifelse(LLRscore >= absoluteCutoff, "high", "low"),
+         RF6score_01 = ifelse(RF6score >= 0.27, "high", "low"),
+         TMB_01 = ifelse(TMB >= 10, "high", "low"),
+         )
+}else{
+  info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLRscore_01 = ifelse(LLRscore >= quantile(LLRscore, 0.5), "high", "low"),
+         RF6score_01 = ifelse(RF6score >= quantile(RF6score, 0.6), "high", "low"),
+         TMB_01 = ifelse(TMB >= quantile(TMB, 0.8), "high", "low"),
+         )
+}
+
+plot_df <- info_df %>%
+  group_by(CancerType) %>% 
+      mutate(LLR6_TMB_group = paste0(LLRscore_01, " LLRscore, ", TMB_01, " TMB"))
+
+
+pdf(paste0(result_dir,"PanCancer_",LLRmodelNA,"_TMB_OScurve_",cutoffType,".pdf"), width = 5*0.8, height = 3.9*0.8, onefile = F) 
+ggsurvplot(survfit(Surv(OS_Months, OS_Event) ~ LLR6_TMB_group, data = plot_df), pval = F, risk.table = F, # risk.table = T,
+         palette = c("#9B2226","#001219", "#CA6702", "#005F73"),
+         risk.table.height = 0.3, xlab = 'Time (months)', ylab = 'OS probability',
+         legend = c(0.35, 1.1),
+         legend.text = element_text(size = 7, color = "black"),
+         legend.labs = c("LORIS-H/TMB-H", "LORIS-H/TMB-L", "LORIS-L/TMB-H", "LORIS-L/TMB-L"),
+         ggtheme = theme(legend.background = element_rect(fill = NA, color=NA),legend.key = element_rect(fill = NA, color=NA),
+                         plot.margin = unit(c(1.5, 0.2, 0.2, 0.2),"cm"),
+                         panel.background = element_rect(fill = "white"),
+                         panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                         panel.border = element_blank(),axis.line = element_line(colour = "black"),
+                         axis.text.x = element_text(colour="black"),axis.text.y = element_text(colour="black")),  # top, right, bot, left
+        pval.method = T, tables.y.text = F) +
+guides(color=guide_legend(ncol =1)) +
+labs(color = "")
+dev.off()
+
+##### HR and p-value comparison
+cancerData=data.frame(info_df$LLRscore_01,info_df$OS_Months,info_df$OS_Event)
+colnames(cancerData) = c("Score", "OS_Months", "OS_Event")
+sfit = survfit(Surv(OS_Months,OS_Event) ~ Score, data=cancerData)
+scox = coxph(Surv(OS_Months,OS_Event) ~ Score, data=cancerData)
+scox_coef = summary(scox)$coefficients
+HR_value = scox_coef[2] # hazard ratio
+Z_value=scox_coef[4]
+P_value=scox_coef[5]
+HR_CI = exp(confint(scox))
+print(paste(c('LLR6 OS: ', P_value,HR_value), collapse= " "))
+
+cancerData=data.frame(info_df$TMB_01,info_df$OS_Months,info_df$OS_Event)
+colnames(cancerData) = c("Score", "OS_Months", "OS_Event")
+sfit = survfit(Surv(OS_Months,OS_Event) ~ Score, data=cancerData)
+scox = coxph(Surv(OS_Months,OS_Event) ~ Score, data=cancerData)
+scox_coef = summary(scox)$coefficients
+HR_value = scox_coef[2] # hazard ratio
+Z_value=scox_coef[4]
+P_value=scox_coef[5]
+HR_CI = exp(confint(scox))
+print(paste(c('TMB OS: ', P_value,HR_value), collapse= " "))
+
+##### p values between 4 different groups
+plot_df_temp = plot_df[plot_df$LLR6_TMB_group=='high LLRscore, high TMB' | plot_df$LLR6_TMB_group=='high LLRscore, low TMB', ]
+scox = coxph(Surv(plot_df_temp$OS_Months,plot_df_temp$OS_Event)~LLR6_TMB_group, data=plot_df_temp)
+scox_coef = summary(scox)$coefficients
+HR_value = scox_coef[2] # hazard ratio
+Z_value=scox_coef[4]
+P_value=scox_coef[5]
+print(paste(c(P_value,HR_value), collapse= " "))
+
+```
+
+
+# Binarize LLR6 and TMB values
+```{r}
+info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLRscore_01 = ifelse(LLRscore >= absoluteCutoff, "high", "low"),
+         RF6score_01 = ifelse(RF6score >= 0.27, "high", "low"),
+         TMB_01 = ifelse(TMB >= 10, "high", "low"),
+         LLRscore_01_2 = ifelse(LLRscore >= quantile(LLRscore, 0.5), "high", "low"),
+         RF6score_01_2 = ifelse(RF6score >= quantile(RF6score, 0.6), "high", "low"),
+         TMB_01_2 = ifelse(TMB >= quantile(TMB, 0.8), "high", "low"),
+         )
+info_df$LLRscore_01 <- relevel(factor(info_df$LLRscore_01), ref = "low")
+info_df$RF6score_01 <- relevel(factor(info_df$RF6score_01), ref = "low")
+info_df$TMB_01 <- relevel(factor(info_df$TMB_01), ref = "low")
+info_df$LLRscore_01_2 <- relevel(factor(info_df$LLRscore_01_2), ref = "low")
+info_df$RF6score_01_2 <- relevel(factor(info_df$RF6score_01_2), ref = "low")
+info_df$TMB_01_2 <- relevel(factor(info_df$TMB_01_2), ref = "low")
+
+```
+
+# Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
+```{r}
+survival_type = 'OS' # 'PFS'  'OS'
+HR_type = 'Multi' # Multi Uni
+Var_type = 'binaryPercent' # continuous  binaryAbsolute binaryPercent
+testVAR0 = 'TMB' # RF6score LLRscore TMB
+if (Var_type == 'binaryAbsolute'){
+  testVAR = paste0(testVAR0, '_01')
+}else if (Var_type == 'binaryPercent'){
+  testVAR = paste0(testVAR0, '_01_2')
+}
+testVAR_HR = testVAR
+if (grepl("binary", Var_type)){
+  testVAR_HR = paste0(testVAR,'high')
+}
+if (HR_type == 'Multi'){
+  var_names = c(testVAR,'Drug', 'Age','Year_IO')
+}else{
+  var_names = c(testVAR)
+}
+
+
+HR_pancancer = data.frame()
+cancerType = 'All'
+data_for_HR = info_df
+formula_obj <- as.formula(paste(paste0("Surv(",survival_type,"_Months, ",survival_type,"_Event) ~"), paste(var_names, collapse = " + ")))
+model = coxph(formula_obj, data = data_for_HR)
+
+HR_ct = exp(model$coefficients[[testVAR_HR]])
+HR_ct_025 = exp(confint(model))[testVAR_HR,1]
+HR_ct_975 = exp(confint(model))[testVAR_HR,2]
+p_ct = summary(model)$coefficients[testVAR_HR,5]
+
+HR_pancancer = rbind(HR_pancancer,data.frame(HR_ct,HR_ct_025,HR_ct_975,p_ct,dim(data_for_HR)[1],cancerType))
+colnames(HR_pancancer) = c(paste0('HR_',testVAR),paste0('HR_',testVAR,'025'),paste0('HR_',testVAR,'975'),paste0('p-val_',testVAR),'No. of patients', 'CancerType')
+
+HR_each_cancer = data.frame()
+for (ct in CancerTypes){
+  cancerType = ct
+  model = coxph(formula_obj, data = data_for_HR[data_for_HR$CancerType==ct,])
+  HR_ct = exp(model$coefficients[[testVAR_HR]])
+  HR_ct_025 = exp(confint(model))[testVAR_HR,1]
+  HR_ct_975 = exp(confint(model))[testVAR_HR,2]
+  p_ct = summary(model)$coefficients[testVAR_HR,5]
+  HR_each_cancer = rbind(HR_each_cancer,data.frame(HR_ct,HR_ct_025,HR_ct_975,p_ct,dim(data_for_HR[data_for_HR$CancerType==ct,])[1],cancerType))
+}
+colnames(HR_each_cancer) = c(paste0('HR_',testVAR),paste0('HR_',testVAR,'025'),paste0('HR_',testVAR,'975'),paste0('p-val_',testVAR),'No. of patients', 'CancerType')
+
+
+command_str <- paste0("HR_each_cancer = arrange(HR_each_cancer, desc(HR_",testVAR,"))") # desc(is.na(HR_",testVAR,")),
+eval(parse(text = command_str))
+cancerOrder = HR_each_cancer$CancerType
+
+HR_each_cancer = rbind(HR_each_cancer,HR_pancancer)
+
+
+plot_data <- tibble::tibble(mean  = HR_each_cancer[[paste0('HR_',testVAR)]],
+                            lower = HR_each_cancer[[paste0('HR_',testVAR,'025')]],
+                            upper = HR_each_cancer[[paste0('HR_',testVAR,'975')]],
+                            cancer = HR_each_cancer$CancerType,
+                            pval = HR_each_cancer[[paste0('p-val_',testVAR)]],
+                            OR = round(HR_each_cancer[[paste0('HR_',testVAR)]], 2),
+                            size = HR_each_cancer$`No. of patients`)
+
+options(scipen = 999)
+P_value_raw = c(plot_data[['pval']], HR_pancancer[[paste0('p-val_',testVAR)]])
+
+
+pval_vec = vector("character", length(P_value_raw))
+for (i in 1:length(P_value_raw)){
+  pval = P_value_raw[i]
+  if (pval>=0.1){
+    pval_vec[i] = as.character(round(pval,2))
+  }else if (pval>=0.001){
+    pval_vec[i] = as.character(round(pval,3))
+  }else if (pval>=0.0001){
+    pval_vec[i] = as.character(round(pval,4))
+  }else{
+    pval_vec[i] = '<0.0001'
+  }
+}
+
+plot_data$pval = pval_vec[1:length(pval_vec)-1]
+
+if (testVAR=='LLRscore'){ # testVAR=='LLRscore'
+  xmin_lim = 0
+  xmax_lim = 10
+  breaks_x = c(0,1,10)
+}else if (testVAR=="LLRscore_01" | testVAR=="LLRscore_01_2"){ # testVAR=='LLRscore'
+  xmin_lim = 0
+  xmax_lim = 4
+  breaks_x = c(0,1,2,3,4)
+}else if (testVAR=='TMB'){ # testVAR=='TMB'
+  xmin_lim = 0
+  xmax_lim = 2
+  breaks_x = c(0,1,2)
+}else if (testVAR=="TMB_01" | testVAR=="TMB_01_2"){ # testVAR=='LLRscore'
+  xmin_lim = 0
+  xmax_lim = 4
+  breaks_x = c(0,1,2,3,4)
+}
+labels_x = breaks_x
+
+
+fontSize = 1.2
+
+pdf_file <- paste0(result_dir,paste0("PanCancer_Forest_",survival_type,"_",HR_type,"_",Var_type,"_",testVAR0,".pdf"))
+fig_width = 5
+fig_height = 5.5
+pdf(pdf_file, onefile=FALSE, width = fig_width,height=fig_height)
+
+
+plot_data %>%
+  forestplot(labeltext = c("cancer", "size", "pval"),
+             graph.pos = 3,
+             boxsize = 0.35,
+             #line.margin = .30, # We need to add this to avoid crowding
+             vertices = TRUE,
+             clip = c(xmin_lim, xmax_lim),
+             xlog = FALSE,
+             zero = 1,
+             #txt_gp = fpTxtGp(cex=0.75),
+             txt_gp = fpTxtGp(ticks=gpar(cex=fontSize),xlab=gpar(cex=fontSize),label=gpar(cex=fontSize),legend=gpar(cex=fontSize),title=gpar(cex=fontSize)), # label, summary, xlab, title, ticks legend
+             xlab = "Hazard ratio",
+             xticks = breaks_x,
+             #lineheight=unit(1,'cm'),
+             graphwidth = unit(3, "cm"),
+             lineheight = unit(2, "cm")
+             ) %>%
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black") %>%
+  fp_add_header(cancer = c("Cancer type")|> fp_txt_plain() |> fp_align_center(),
+                size = c("Samples")|> fp_txt_plain() |> fp_align_center(), # "No. of patients"
+                pval = c("P-value")|> fp_txt_plain() |> fp_align_center())
+#par(mar=c(10, 10, 10, 10))
+
+dev.off()
+
+```
+
+# X-year PFS/OS comparison for score-low VS score-high patients (X = 0.5,1,2,3,4,5 years)
+```{r}
+testVAR = 'LLRscore_01_2' # RF6score_01 LLRscore_01 TMB_01 RF6score_01_2 LLRscore_01_2 TMB_01_2
+
+if (grepl('_01_2', testVAR)){
+  testVAR_NA = paste0(substr(testVAR, 1, nchar(testVAR) - 5),'_PercentileCutoff')
+}else{
+  testVAR_NA = paste0(substr(testVAR, 1, nchar(testVAR) - 3),'_AbsoluteCutoff')
+}
+
+OSrate_score = data.frame()
+
+for (os_time in c(6,12,24,36,48,60)){
+  month_OS = os_time
+  for (ct in CancerTypes){
+    
+    data_ct = info_df[info_df['CancerType']==ct,]
+    cancerData=data.frame(data_ct[testVAR],data_ct$OS_Months,data_ct$OS_Event)
+    colnames(cancerData) = c("Score", "OS_Months", "OS_Event")
+    sfit = survfit(Surv(OS_Months,OS_Event) ~ Score, data=cancerData)
+    OS_rates = summary(sfit,time=c(month_OS),extend=TRUE)$surv
+    OSrate_score = rbind(OSrate_score,data.frame(OS_rates[1],OS_rates[2],month_OS,row.names = ct))
+  }
+  cancerData=data.frame(info_df[testVAR],info_df$OS_Months,info_df$OS_Event)
+  colnames(cancerData) = c("Score", "OS_Months", "OS_Event")
+  sfit = survfit(Surv(OS_Months,OS_Event) ~ Score, data=cancerData)
+  OS_rates = summary(sfit,time=c(month_OS),extend=TRUE)$surv
+  OSrate_score = rbind(OSrate_score, data.frame(OS_rates[1],OS_rates[2],month_OS,row.names = 'All'))
+}
+colnames(OSrate_score) = c('OSR_L','OSR_H','Time')
+
+OSrate_score['CANCER_TYPE'] = rownames(OSrate_score)
+
+
+################ 6-month OSR paired plot
+OSrate_score_6month = OSrate_score[OSrate_score$Time==6,]
+ggpaired(OSrate_score_6month %>% rename(`High` = OSR_H,
+                                `Low` = OSR_L), 
+         cond1 = "High", cond2 = "Low", line.color = "CANCER_TYPE", line.size = 1,
+         fill = "gray65",
+         palette = my.cols, xlab = "Half year", legend.title = "Cancer type", ylab = "OS probability") +
+  #stat_compare_means(paired = T, na.rm = TRUE) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 0, hjust = 0.5)) + # right angle = 30
+  ylim(0, 1) 
+ggsave(paste0(result_dir,paste0("OS_6month_Comparison_",testVAR_NA,".pdf")), width = 1.8*1.2, height = 2.4*1.2) # width = 2.3, height = 2.7
+print(paste("Delta 6-month OS rate:",median(OSrate_score_6month$OSR_H, na.rm = TRUE) - median(OSrate_score_6month$OSR_L, na.rm = TRUE),sep=" "))
+stat_result = wilcox.test(OSrate_score_6month$OSR_H, OSrate_score_6month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
+print(paste0('6-month Wilcoxon p-value: ',stat_result$p.value))
+
+################ 12-month OSR paired plot
+OSrate_score_12month = OSrate_score[OSrate_score$Time==12,]
+ggpaired(OSrate_score_12month %>% rename(`High` = OSR_H,
+                                `Low` = OSR_L), 
+         cond1 = "High", cond2 = "Low", line.color = "CANCER_TYPE", line.size = 1,
+         fill = "gray65",
+         palette = my.cols, xlab = "One year", legend.title = "Cancer type", ylab = "OS probability") +
+  #stat_compare_means(paired = T, na.rm = TRUE) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 0, hjust = 0.5)) + # right
+  ylim(0, 1) 
+ggsave(paste0(result_dir,paste0("OS_12month_Comparison_",testVAR_NA,".pdf")), width = 1.8*1.2, height = 2.4*1.2) # width = 2.3, height = 2.7
+print(paste("Delta 12-month OS rate:",median(OSrate_score_12month$OSR_H, na.rm = TRUE) - median(OSrate_score_12month$OSR_L, na.rm = TRUE),sep=" "))
+stat_result = wilcox.test(OSrate_score_12month$OSR_H, OSrate_score_12month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
+print(paste0('12-month Wilcoxon p-value: ',stat_result$p.value))
+
+################ 24-month OSR paired plot
+OSrate_score_24month = OSrate_score[OSrate_score$Time==24,]
+ggpaired(OSrate_score_24month %>% rename(`High` = OSR_H,
+                                `Low` = OSR_L), 
+         cond1 = "High", cond2 = "Low", line.color = "CANCER_TYPE", line.size = 1,
+         fill = "gray65",
+         palette = my.cols, xlab = "Two years", legend.title = "Cancer type", ylab = "OS probability") +
+  #stat_compare_means(paired = T, na.rm = TRUE) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 0, hjust = 0.5)) + # right
+  ylim(0, 1) 
+ggsave(paste0(result_dir,paste0("OS_24month_Comparison_",testVAR_NA,".pdf")), width = 1.8*1.2, height = 2.4*1.2) # width = 2.3, height = 2.7
+print(paste("Delta 24-month OS rate:",median(OSrate_score_24month$OSR_H, na.rm = TRUE) - median(OSrate_score_24month$OSR_L, na.rm = TRUE),sep=" "))
+stat_result = wilcox.test(OSrate_score_24month$OSR_H, OSrate_score_24month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
+print(paste0('24-month Wilcoxon p-value: ',stat_result$p.value))
+
+################ 36-month OSR paired plot
+OSrate_score_36month = OSrate_score[OSrate_score$Time==36,]
+ggpaired(OSrate_score_36month %>% rename(`High` = OSR_H,
+                                `Low` = OSR_L), 
+         cond1 = "High", cond2 = "Low", line.color = "CANCER_TYPE", line.size = 1,
+         fill = "gray65",
+         palette = my.cols, xlab = "Three years", legend.title = "Cancer type", ylab = "OS probability") +
+  #stat_compare_means(paired = T, na.rm = TRUE) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 0, hjust = 0.5)) + # right
+  ylim(0, 1) 
+ggsave(paste0(result_dir,paste0("OS_36month_Comparison_",testVAR_NA,".pdf")), width = 1.8*1.2, height = 2.4*1.2) # width = 2.3, height = 2.7
+print(paste("Delta 36-month OS rate:",median(OSrate_score_36month$OSR_H, na.rm = TRUE) - median(OSrate_score_36month$OSR_L, na.rm = TRUE),sep=" "))
+stat_result = wilcox.test(OSrate_score_36month$OSR_H, OSrate_score_36month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
+print(paste0('36-month Wilcoxon p-value: ',stat_result$p.value))
+
+################ 48-month OSR paired plot
+OSrate_score_48month = OSrate_score[OSrate_score$Time==48,]
+ggpaired(OSrate_score_48month %>% rename(`High` = OSR_H,
+                                `Low` = OSR_L), 
+         cond1 = "High", cond2 = "Low", line.color = "CANCER_TYPE", line.size = 1,
+         fill = "gray65",
+         palette = my.cols, xlab = "Four years", legend.title = "Cancer type", ylab = "OS probability") +
+  #stat_compare_means(paired = T, na.rm = TRUE) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 0, hjust = 0.5)) + # right
+  ylim(0, 1) 
+ggsave(paste0(result_dir,paste0("OS_48month_Comparison_",testVAR_NA,".pdf")), width = 1.8*1.2, height = 2.4*1.2) # width = 2.3, height = 2.7
+print(paste("Delta 48-month OS rate:",median(OSrate_score_48month$OSR_H, na.rm = TRUE) - median(OSrate_score_48month$OSR_L, na.rm = TRUE),sep=" "))
+stat_result = wilcox.test(OSrate_score_48month$OSR_H, OSrate_score_48month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
+print(paste0('48-month Wilcoxon p-value: ',stat_result$p.value))
+
+################ 60-month OSR paired plot
+OSrate_score_60month = OSrate_score[OSrate_score$Time==60,]
+ggpaired(OSrate_score_60month %>% rename(`High` = OSR_H,
+                                `Low` = OSR_L), 
+         cond1 = "High", cond2 = "Low", line.color = "CANCER_TYPE", line.size = 1,
+         fill = "gray65",
+         palette = my.cols, xlab = "Five years", legend.title = "Cancer type", ylab = "OS probability") +
+  #stat_compare_means(paired = T, na.rm = TRUE) +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 0, hjust = 0.5)) + # right
+  ylim(0, 1) 
+ggsave(paste0(result_dir,paste0("OS_60month_Comparison_",testVAR_NA,".pdf")), width = 1.8*1.2, height = 2.4*1.2) # width = 2.3, height = 2.7
+print(paste("Delta 60-month OS rate:",median(OSrate_score_60month$OSR_H, na.rm = TRUE) - median(OSrate_score_60month$OSR_L, na.rm = TRUE),sep=" "))
+stat_result = wilcox.test(OSrate_score_60month$OSR_H, OSrate_score_60month$OSR_L, paired = TRUE, alternative = "two.sided", na.rm = TRUE)
+print(paste0('60-month Wilcoxon p-value: ',stat_result$p.value))
+
+```
