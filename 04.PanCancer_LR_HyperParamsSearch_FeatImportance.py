@@ -5,11 +5,11 @@ import numpy as np
 from sklearn import linear_model
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
-from collections import Counter
 import sys
 
+
 phenoNA = 'Response'
-LRmodelNA = sys.argv[1] #  'LR8'   'LR6'   'LR5noTMB'   'LR5noChemo'
+LRmodelNA = sys.argv[1] #  'LR8'   'LR6'
 if LRmodelNA == 'LR8':
     featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'Drug', 'Sex', 'CancerType1',
                   'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
@@ -20,16 +20,7 @@ elif LRmodelNA == 'LR6':
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-elif LRmodelNA == 'LR5noTMB':
-    featuresNA = ['Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
-                      'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
-                      'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                      'CancerType14', 'CancerType15', 'CancerType16']  # noTMB
-elif LRmodelNA == 'LR5noChemo':
-    featuresNA = ['TMB', 'Albumin', 'NLR', 'Age', 'CancerType1',
-                      'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
-                      'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                      'CancerType14', 'CancerType15', 'CancerType16']  # noChemo
+
 xy_colNAs = featuresNA + [phenoNA]
 
 print('Raw data processing ...')
@@ -52,48 +43,28 @@ dataChowell_Train['NLR'] = [c if c < NLR_upper else NLR_upper for c in dataChowe
 x_train = pd.DataFrame(dataChowell_Train, columns=featuresNA)
 x_train = StandardScaler().fit_transform(x_train)
 y_train = pd.DataFrame(dataChowell_Train, columns=[phenoNA])
-params = {'solver': ['saga'],
-          'l1_ratio': [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],
-          'max_iter': range(100,1100,100),
-          'penalty': ['elasticnet'],
-          'C': list(10 ** np.arange(-3, 3.01, 1)),
-          'class_weight': ['balanced'],
-          }
-lr_clf = linear_model.LogisticRegression(random_state = 1)
-grid_cv = GridSearchCV(lr_clf, param_grid = params, cv = Kfold_list, scoring='roc_auc', n_jobs = -1)
-grid_cv.fit(x_train, y_train.values.ravel())
-model_hyperParas_fn = '../03.Results/6features/PanCancer/ModelParaSearchResult_L'+LRmodelNA+'_Scaler(StandardScaler)_CV'+\
-                              str(Kfold) + 'Rep' + str(N_repeat_KFold_paramTune) + '_random' + str(randomSeed) + '.txt'
-model_hyperParas_fh = open(model_hyperParas_fn,'w')
-counter = Counter(dataChowell_Train[phenoNA])  # count examples in each class
-pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
-print('  Number of all features: ', len(featuresNA), '\n  Their names: ', featuresNA, file=model_hyperParas_fh)
-print('  Phenotype name: ', phenoNA, file=model_hyperParas_fh)
-print('  Negative/Positive samples in training set: ', pos_weight, file=model_hyperParas_fh)
-print('Data size: ', dataChowell_Train.shape[0], file=model_hyperParas_fh)
-print('Best params on CV sets: ', grid_cv.best_params_, file=model_hyperParas_fh)
-print('Best score on CV sets: ', grid_cv.best_score_, file=model_hyperParas_fh)
-print('Optimal hyperparameter: ', grid_cv.best_params_)
-print('Max AUC: {:.4f}'.format(grid_cv.best_score_))
 
-######## Feature coef. plot
-plt.rcParams.update({'font.size': 10})
-plt.rcParams["font.family"] = "Arial"
-
-LR = grid_cv.best_estimator_.fit(x_train, y_train.values.ravel())
+LLRmodelNA ='LLR6' #  'LLR6'
+para_fn = '../03.Results/6features/PanCancer/PanCancer_'+LLRmodelNA+'_10k_ParamCalculate.txt'
+params_data = open(para_fn, 'r').readlines()
+params_dict = {}
+for line in params_data:
+    if 'LLR_' not in line:
+        continue
+    words = line.strip().split('\t')
+    param_name = words[0]
+    params_val = [float(c) for c in words[1:]]
+    params_dict[param_name] = params_val
+LR = linear_model.LogisticRegression().fit(x_train, y_train)
+LR.coef_ = np.array([params_dict['LLR_coef']])
+LR.intercept_ = np.array(params_dict['LLR_intercept'])
 
 if LRmodelNA == 'LR8':
     coefs = np.array(list(LR.coef_[0][0:7]) + [np.mean(abs(LR.coef_[0][7:]))])
-    feature_NAs = ['TMB', 'Chemotherapy history', 'Albumin', 'NLR', 'Age', 'Drug class', 'Sex', 'Cancer type']
+    feature_NAs = ['TMB', 'Systemic therapy history', 'Albumin', 'NLR', 'Age', 'Drug class', 'Sex', 'Cancer type']
 elif LRmodelNA == 'LR6':
     coefs = np.array(list(LR.coef_[0][0:5]) + [np.mean(abs(LR.coef_[0][5:]))])
-    feature_NAs = ['TMB', 'Chemotherapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
-elif LRmodelNA == 'LR5noTMB':
-    coefs = np.array(list(LR.coef_[0][0:4]) + [np.mean(abs(LR.coef_[0][4:]))])
-    feature_NAs = ['Chemotherapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
-elif LRmodelNA == 'LR5noChemo':
-    coefs = np.array(list(LR.coef_[0][0:4]) + [np.mean(abs(LR.coef_[0][4:]))])
-    feature_NAs = ['TMB', 'Albumin', 'NLR', 'Age', 'Cancer type']
+    feature_NAs = ['TMB', 'Systemic therapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
 
 feature_coefs_abs = abs(coefs)
 sorted_idx = np.argsort(feature_coefs_abs)
@@ -102,9 +73,9 @@ feature_coefs_abs = feature_coefs_abs[sorted_idx]
 feature_NAs = np.array(feature_NAs)[sorted_idx]
 pos = np.arange(sorted_idx.shape[0]) + .5
 figOut = '../03.Results/FigureS3_featureImportance_'+LRmodelNA+'.pdf'
-featfig = plt.figure(figsize=(3, 3))
+featfig = plt.figure(figsize=(3.5, 3))
 featax = featfig.add_subplot(1, 1, 1)
-featfig.subplots_adjust(left=0.5, bottom=0.15, right=0.95, top=0.98, wspace=0.45, hspace=0.35)
+featfig.subplots_adjust(left=0.6, bottom=0.15, right=0.95, top=0.98, wspace=0.45, hspace=0.35)
 featax.barh(pos, feature_coefs_abs, align='center', color='g')
 
 featax.set_yticks(pos)

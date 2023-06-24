@@ -33,7 +33,9 @@ if __name__ == "__main__":
     dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowell_Train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+
     dataChowell_Train0 = pd.concat([dataChowell_Train0,dataChowell_Train1],axis=0)
+
     dataChowell_Train0 = dataChowell_Train0.loc[dataChowell_Train0['CancerType']=='NSCLC',]
     dataChowell_Train0 = dataChowell_Train0[xy_colNAs].dropna(axis=0)
     dataChowell_Train = copy.deepcopy(dataChowell_Train0)

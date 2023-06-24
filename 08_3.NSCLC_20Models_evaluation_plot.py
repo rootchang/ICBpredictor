@@ -5,7 +5,7 @@ import numpy as np
 import sys
 import colorcet as cc
 
-dataset = sys.argv[1]  # 'Chowell', 'DFCI'
+dataset = 'Chowell'
 try:
     randomSeed = int(sys.argv[2])
 except:
@@ -152,10 +152,7 @@ i=0
 j=1
 x_str = 'PRAUC_'+plot_train_test
 if plot_train_test != 'delta':
-    if dataset == 'Chowell':
-        random_performance = 89 / 324
-    else: # 'DFCI'
-        random_performance = 155 / 607
+    random_performance = 89 / 324
 else:
     random_performance = 0
 graph = sns.violinplot(y="method", x=x_str, data=performance_df,
@@ -236,10 +233,7 @@ i=0
 j=4
 x_str = 'Performance_'+plot_train_test
 if plot_train_test != 'delta':
-    if dataset == 'Chowell':
-        random_performance = (0.5**3*(89 / 324))**(1/4)
-    else: # 'DFCI'
-        random_performance = (0.5**3*(155 / 607))**(1/4)
+    random_performance = (0.5**3*(89 / 324))**(1/4)
 
 else:
     random_performance = 0

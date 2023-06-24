@@ -13,13 +13,12 @@ if __name__ == "__main__":
 
     ############################################## 0. Parameters setting ##############################################
     MLM_list1=['TMB', 'RF6', 'DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
-               'BernoulliNaiveBayes'] # None (#6) , 'RF16_NBT' (does not apply to DFCI dataset)
+               'BernoulliNaiveBayes'] # None (#6) , 'RF16_NBT'
     MLM_list2=['LLR6', 'LLR5noTMB', 'LLR5noChemo', 'LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost', 'LightGBM',
                'SupportVectorMachineLinear','SupportVectorMachinePoly','SupportVectorMachineRadial',
                'kNearestNeighbourhood','DNN','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3','NeuralNetwork4',
                'GaussianProcess','QuadraticDiscriminantAnalysis'] # StandardScaler (#18)
     MLM = sys.argv[1]
-    dataset = sys.argv[2]  # 'Chowell', 'DFCI'
     if MLM in MLM_list1:
         SCALE = 'None'
     elif MLM in MLM_list2:
@@ -27,9 +26,10 @@ if __name__ == "__main__":
     else:
         raise Exception('MLM not recognized!')
     try:
-        randomSeed = int(sys.argv[3])
+        randomSeed = int(sys.argv[2])
     except:
         randomSeed = 1
+    dataset = 'Chowell'
     CPU_num = 6#-1
     N_repeat_KFold_paramTune = 1
     N_repeat_KFold = 2000
@@ -43,33 +43,22 @@ if __name__ == "__main__":
         featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
     elif MLM == 'LLR5noTMB':
         featuresNA = ['PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    elif MLM == 'LLR5noChemo':
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Albumin', 'NLR', 'Age']
     elif MLM == 'TMB':
         featuresNA = ['TMB']
     else:
-        if dataset == 'Chowell':
-            featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex',
-                          'MSI', 'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
-        elif dataset == 'DFCI':
-            featuresNA = ['Sex', 'Smoking_status', 'Pack_years', 'Histology','PDL1_TPS(%)', 'TMB', 'Chemo_before_IO', 'Treatment_Line_of_immunotherapy',
-                          'Performance_status', 'Age', 'Drug','WBC', 'Neutro', 'Lymphocytes', 'Monocytes', 'Eosinophils ', 'Platelet', 'Albumin', 'NLR',
-                          'MLR', 'PLR','ELR', 'LA', 'LRA', 'NMR', 'ENR', 'PNR', 'NPAR', 'NAR', 'EMR', 'PMR', 'MPAR', 'MAR', 'EPAR', 'EAR', 'PAR']
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex',
+                      'MSI', 'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
     xy_colNAs = featuresNA + [phenoNA]
     cat_features = []
 
 
     ################################################# 1. Data read in #################################################
     print('Raw data processing ...')
-    if dataset == 'Chowell':
-        dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-        data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-        data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
-        data_train = pd.concat([data_train1, data_train2], axis=0)
-        data_train = data_train.loc[data_train['CancerType'] == 'NSCLC',]
-    elif dataset == 'DFCI':
-        dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-        data_train = pd.read_excel(dataALL_fn, sheet_name='Awad', index_col=0)
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
+    data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    data_train = pd.concat([data_train1, data_train2], axis=0)
+    data_train = data_train.loc[data_train['CancerType'] == 'NSCLC',]
     data_train = data_train[xy_colNAs].dropna()
     # Data truncation
     TMB_upper = 50
@@ -114,10 +103,7 @@ if __name__ == "__main__":
     elif MLM == 'TMB':
         param_dict = {'penalty': ['none']}
     elif MLM == 'GaussianProcess':
-        if dataset == 'Chowell':
-            param_dict = {'optimizer': ['fmin_l_bfgs_b'], 'n_restarts_optimizer': [0], 'max_iter_predict': [100], 'kernel': [1 * kernels.RBF(length_scale=1)]} # 16 features
-        elif dataset == 'DFCI':
-            param_dict = {'optimizer': ['fmin_l_bfgs_b'], 'n_restarts_optimizer': [5], 'max_iter_predict': [100], 'kernel': [1 * kernels.RBF(length_scale=1)]}  # 36 features
+        param_dict = {'optimizer': ['fmin_l_bfgs_b'], 'n_restarts_optimizer': [0], 'max_iter_predict': [100], 'kernel': [1 * kernels.RBF(length_scale=1)]} # 16 features
     ############################### 2. Optimal model hyperparameter combination search ################################
     MLM_equiv = MLM
     if MLM in ['LLR6', 'TMB', 'LLR5noTMB', 'LLR5noChemo']:

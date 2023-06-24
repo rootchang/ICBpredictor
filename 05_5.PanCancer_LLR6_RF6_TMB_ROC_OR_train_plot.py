@@ -17,7 +17,7 @@ plt.rcParams["font.family"] = "Arial"
 plt.tick_params(axis='both', direction="out", length=2)
 
 phenoNA = 'Response'
-LLRmodelNA = 'LLR6' # 'LLR6'   'LLR5noTMB'   'LLR5noChemo'
+LLRmodelNA = 'LLR6' # 'LLR6'
 if LLRmodelNA == 'LLR6':
     featuresNA_LLR = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',

@@ -7,13 +7,9 @@ if __name__ == "__main__":
     #               'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
     #               'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
     #               'CancerType14', 'CancerType15', 'CancerType16'] # pan-cancer feature order
-    # featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] # NSCLC feature order
 
     ###################### Read in LLRx model params ######################
-    # fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
-    # fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR5noChemo_10k_ParamCalculate.txt'
-    # fnIn = '../03.Results/6features/NSCLC/NSCLC_LLR6_10k_ParamCalculate.txt'
-    fnIn = '../03.Results/6features/NSCLC/NSCLC_LLR5_10k_ParamCalculate_noChemo.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:

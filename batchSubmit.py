@@ -5,7 +5,8 @@ s###############################################################################
 import os
 import sys
 
-RAND = sys.argv[1]
+RAND = sys.argv[1] # 1
+TASK = sys.argv[2] # 'PS'  'PE'  'NS'  'NE'
 
 # MLM_list = ['DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
 #              'BernoulliNaiveBayes', 'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost',
@@ -24,7 +25,7 @@ MLM_list2 = ['LLR6', 'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGB
              'kNearestNeighbourhood', 'DNN', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4',
              'GaussianProcess', 'QuadraticDiscriminantAnalysis']  # StandardScaler (#18)
 
-TASK = sys.argv[1] # 'PS'  'PE'  'NS'  'NE'
+
 
 ################################################## PanCancer ##################################################
 if TASK in ['PS', 'PE']:
@@ -41,7 +42,7 @@ if TASK in ['PS', 'PE']:
 
 ################################################## NSCLC ##################################################
 if TASK in ['NS', 'NE']:
-    for DATA in ['Chowell','DFCI']:
+    for DATA in ['Chowell']:
         for method in MLM_list:
             if method in MLM_list1:
                 data_scale = 'None'

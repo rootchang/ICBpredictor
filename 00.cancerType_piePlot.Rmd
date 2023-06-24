@@ -1,0 +1,146 @@
+
+# load required package
+```{r}
+library(data.table)
+library(ggplot2)
+
+```
+
+# set the color scale
+```{r}
+my.cols <- c("#7CD5C8FF", "#507D41FF", "#DF8F44FF", "#6A6599FF", "#CB7C77FF", "#6B42C8FF",
+             "#C9D73DFF", "#C555CBFF", "#AED688FF", "#502E71FF", "#C49A3FFF",
+             "#42B540FF", "#0099B4FF", "#925E9FFF", 
+             "#FDAF91FF", "#AD002AFF", "#00468BFF", "#ED0000FF",
+             "#6A7DC9FF", "#D7652DFF", 
+             "#CF4C8BFF", "#5D8D9CFF", "#722E41FF", "#C8B693FF", "#C5383CFF", "#79AF97FF", "#68D359FF")
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+cutoff = 0.5
+
+```
+
+# load data 
+```{r}
+selected_cols = c("SAMPLE_ID","CancerType")
+Chowell_df1 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+Chowell_df1 = Chowell_df1[selected_cols]
+Chowell_df2 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+Chowell_df2 = Chowell_df2[selected_cols]
+Chowell_df = rbind(Chowell_df1,Chowell_df2)
+
+MSK_df1 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+MSK_df1 = MSK_df1[selected_cols]
+MSK_df2 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new2")
+MSK_df2 = MSK_df2[selected_cols]
+MSK_df = rbind(MSK_df1,MSK_df2)
+
+Kato_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Kurzrock_panCancer")
+Kato_df = Kato_df[selected_cols]
+
+Pradat_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Pradat_panCancer")
+Pradat_df = Pradat_df[selected_cols]
+
+CancerTypes = unique(c(Chowell_df$CancerType, MSK_df$CancerType, Kato_df$CancerType, Pradat_info_df$CancerType))
+
+```
+
+# pie plot of cancer composition
+```{r}
+Chowell_cancerComposition <- table(factor(Chowell_df$CancerType, levels = CancerTypes))
+Chowell_cancerComposition = as.data.frame(Chowell_cancerComposition)
+colnames(Chowell_cancerComposition) = c('CancerType', 'Ratio')
+
+MSK_cancerComposition <- table(factor(MSK_df$CancerType, levels = CancerTypes))
+MSK_cancerComposition = as.data.frame(MSK_cancerComposition)
+colnames(MSK_cancerComposition) = c('CancerType', 'Ratio')
+
+Kato_cancerComposition <- table(factor(Kato_df$CancerType, levels = CancerTypes))
+Kato_cancerComposition = as.data.frame(Kato_cancerComposition)
+colnames(Kato_cancerComposition) = c('CancerType', 'Ratio')
+
+Pradat_cancerComposition <- table(factor(Pradat_df$CancerType, levels = CancerTypes))
+Pradat_cancerComposition = as.data.frame(Pradat_cancerComposition)
+colnames(Pradat_cancerComposition) = c('CancerType', 'Ratio')
+
+####### pie chart of Chowell et al.
+pie_chart <- ggplot(Chowell_cancerComposition, aes(x="", y=Ratio, fill=CancerType)) +
+  scale_fill_manual(values = rev(my.cols))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+# Remove x and y axis labels and ticks
+pie_chart <- pie_chart +
+  theme_bw()+
+  theme(legend.position = "none") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.grid=element_blank(),
+        panel.border = element_blank()) +
+  labs(x = "", y = "")
+# Save figure
+ggsave(paste0(result_dir,paste0("Figure1A_cancerType_piePlot_Chowell.pdf")), width = 1.8*1, height = 1.8*1) # width = 2.3, height = 2.7
+
+
+####### pie chart of MSK1&2
+pie_chart <- ggplot(MSK_cancerComposition, aes(x="", y=Ratio, fill=CancerType)) +
+  geom_bar(stat="identity", width=1) +
+  scale_fill_manual(values = rev(my.cols))+
+  coord_polar("y", start=0)
+# Remove x and y axis labels and ticks
+pie_chart <- pie_chart +
+  theme_bw()+
+  theme(legend.position = "none") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.grid=element_blank(),
+        panel.border = element_blank()) +
+  labs(x = "", y = "")
+# Save figure
+ggsave(paste0(result_dir,paste0("Figure1A_cancerType_piePlot_MSK.pdf")), width = 1.8*1, height = 1.8*1) # width = 2.3, height = 2.7
+
+
+####### pie chart of Kato
+pie_chart <- ggplot(Kato_cancerComposition, aes(x="", y=Ratio, fill=CancerType)) +
+  scale_fill_manual(values = rev(my.cols))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+# Remove x and y axis labels and ticks
+pie_chart <- pie_chart +
+  theme_bw()+
+  theme(legend.position = "none") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.grid=element_blank(),
+        panel.border = element_blank()) +
+  labs(x = "", y = "")
+# Save figure
+ggsave(paste0(result_dir,paste0("Figure1A_cancerType_piePlot_Kato.pdf")), width = 1.8*1, height = 1.8*1) # width = 2.3, height = 2.7
+
+
+####### pie chart of Pradat
+pie_chart <- ggplot(Pradat_cancerComposition, aes(x="", y=Ratio, fill=CancerType)) +
+  scale_fill_manual(values = rev(my.cols))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+# Remove x and y axis labels and ticks
+pie_chart <- pie_chart +
+  theme_bw()+
+  theme(legend.position = "none") +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.grid=element_blank(),
+        panel.border = element_blank()) +
+  labs(x = "", y = "")
+# Save figure
+ggsave(paste0(result_dir,paste0("Figure1A_cancerType_piePlot_Pradat.pdf")), width = 1.8*1, height = 1.8*1) # width = 2.3, height = 2.7
+
+```
+

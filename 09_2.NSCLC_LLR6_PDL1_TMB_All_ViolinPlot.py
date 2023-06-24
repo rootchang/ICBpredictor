@@ -15,12 +15,12 @@ if __name__ == "__main__":
     LLRmodelNA = sys.argv[1]  # 'LLR6'   'LLR5noTMB'   'LLR5noChemo'
     print('Raw data read in ...')
     fnIn = '../03.Results/' + 'NSCLC_'+LLRmodelNA+'_Scaler(StandardScaler)_prediction.xlsx'
-    start_set = 1
+    start_set = 0
     if start_set:
         output_fig_fn = '../03.Results/NSCLC_'+LLRmodelNA+'_TMB_N_NR_score_violin_testOnly.pdf'
     else:
         output_fig_fn = '../03.Results/NSCLC_'+LLRmodelNA+'_TMB_N_NR_score_violin_all.pdf'
-    for sheet_i in range(start_set,4):
+    for sheet_i in range(start_set,5):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_LLR6=np.array(data['y_pred'].tolist())
         y_true=np.array(data['y'].tolist())
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     plot_PDL1_df = pd.DataFrame()
     plot_data_PDL1 = []
     fnIn = '../03.Results/NSCLC_PDL1_Scaler(None)_prediction.xlsx'
-    for sheet_i in range(start_set,4):
+    for sheet_i in range(start_set,5):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_PDL1 = np.array(data['y_pred'].tolist())
         y_true = np.array(data['y'].tolist())
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     plot_TMB_df = pd.DataFrame()
     plot_data_TMB = []
     fnIn = '../03.Results/NSCLC_TMB_Scaler(None)_prediction.xlsx'
-    for sheet_i in range(start_set,4):
+    for sheet_i in range(start_set,5):
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_TMB = np.array(data['y_pred'].tolist())
         y_true = np.array(data['y'].tolist())
@@ -76,28 +76,30 @@ if __name__ == "__main__":
     plot_df = pd.concat([plot_LLR6_df, plot_PDL1_df], axis=1)
     plot_df = pd.concat([plot_df, plot_TMB_df], axis=1)
 
-    for i in range(3):
+    for i in range(5):
         x = plot_data_LLR6[i*2]
         y = plot_data_LLR6[i*2+1]
         statistic, p_value = mannwhitneyu(x, y, alternative='greater')
         print('LLR6 p-value: ', p_value)
-    for i in range(3):
+    for i in range(5):
         x = plot_data_PDL1[i*2]
         y = plot_data_PDL1[i*2+1]
         statistic, p_value = mannwhitneyu(x, y, alternative='greater')
         print('PDL1 p-value: ', p_value)
-    for i in range(3):
+    for i in range(5):
         x = plot_data_TMB[i*2]
         y = plot_data_TMB[i*2+1]
         statistic, p_value = mannwhitneyu(x, y, alternative='greater')
         print('TMB p-value: ', p_value)
 
+    x_label = ['Chowell et al.', 'MSK1','Shim et al.', 'Vanguri et al.', 'Ravi et al.']
+    rotation_angle = 60
     ################ violin & box plot for scores distribution among R and NR
     fontSize = 10
     plt.rcParams['font.size'] = fontSize
     plt.rcParams["font.family"] = "Arial"
-    fig, axes = plt.subplots(1, 3, figsize=(6.5, 1.9))
-    plt.subplots_adjust(left=0.12, bottom=0.39, right=0.98, top=0.99, wspace=0.4, hspace=0.45)
+    fig, axes = plt.subplots(1, 3, figsize=(6.3, 2.1))
+    plt.subplots_adjust(left=0.08, bottom=0.4, right=0.99, top=0.99, wspace=0.4, hspace=0.45)
 
     boxplot_linewidth = 0.5
     my_palette = {"R": "g", "NR": "0.5"}
@@ -106,7 +108,7 @@ if __name__ == "__main__":
                            palette=my_palette, linewidth=0.5, saturation=0.75,
                            scale="width", ax=axes[0], zorder=2)
     graph.legend_.remove()
-    axes[0].set_xticklabels(['MSK 1 (NSCLC)','DFCI','Shim et al.'], rotation=30, ha='right')
+    axes[0].set_xticklabels(x_label, rotation=rotation_angle, ha='right')
     axes[0].set_xlabel('')
     axes[0].set_ylabel('LORIS')
 
@@ -115,7 +117,7 @@ if __name__ == "__main__":
                            palette=my_palette, linewidth=0.5, saturation=0.75,
                            scale="width", ax=axes[1], zorder=2)
     graph.legend_.remove()
-    axes[1].set_xticklabels(['MSK 1 (NSCLC)','DFCI','Shim et al.'], rotation=30, ha='right')
+    axes[1].set_xticklabels(x_label, rotation=rotation_angle, ha='right')
     axes[1].set_xlabel('')
     axes[1].set_ylabel('log2(PDL1 TPS+1)')
 
@@ -124,7 +126,7 @@ if __name__ == "__main__":
                            palette=my_palette, linewidth=0.5, saturation=0.75,
                            scale="width", ax=axes[2], zorder=2)
     graph.legend_.remove()
-    axes[2].set_xticklabels(['MSK 1 (NSCLC)','DFCI','Shim et al.'], rotation=30, ha='right')
+    axes[2].set_xticklabels(x_label, rotation=rotation_angle, ha='right')
     axes[2].set_xlabel('')
     axes[2].set_ylabel('log2(TMB+1)')
 

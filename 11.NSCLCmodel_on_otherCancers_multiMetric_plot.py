@@ -75,10 +75,6 @@ if __name__ == "__main__":
     dataMSK_Mesothelioma = pd.concat([dataChowell_Mesothelioma[xy_colNAs], dataMorris_Mesothelioma[xy_colNAs]], axis=0)
     dataMSK_Esophageal = pd.concat([dataChowell_Esophageal[xy_colNAs], dataMorris_Esophageal[xy_colNAs]], axis=0)
 
-    dataAwad1 = pd.read_excel(dataALL_fn, sheet_name='Awad_NSCLC1', index_col=0)
-    dataAwad2 = pd.read_excel(dataALL_fn, sheet_name='Awad_NSCLC2', index_col=0)
-    dataAwad3 = pd.read_excel(dataALL_fn, sheet_name='Awad_NSCLC3', index_col=0)
-    dataAwad = pd.concat([dataAwad1, dataAwad2,dataAwad3], axis=0)
     dataLee = pd.read_excel(dataALL_fn, sheet_name='Lee_NSCLC', index_col=0)
 
     dataALL = [dataChowell_NSCLC, dataMSK_Gastric, dataMSK_Mesothelioma, dataMSK_Esophageal]
@@ -290,14 +286,14 @@ if __name__ == "__main__":
 
     ############# Plot ROC curves ##############
     output_fig1 = '../03.Results/NSCLC_'+LLRmodelNA+'_PDL1_TMB_ROC_compare_on_nonNSCLC.pdf'
-    ax1 = [0] * 4
-    fig1, ((ax1[0], ax1[1], ax1[2], ax1[3])) = plt.subplots(1, 4, figsize=(6.5, 1.5))
+    ax1 = [0] * 3
+    fig1, ((ax1[0], ax1[1], ax1[2])) = plt.subplots(1, 3, figsize=(5.5, 1.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.35)
 
-    for i in range(4):
-        y_true = y_test_list[i]
+    for i in range(3):
+        y_true = y_test_list[i+1]
         ###### LLR6 model
-        y_pred = y_pred_LLR6[i]
+        y_pred = y_pred_LLR6[i+1]
         fpr, tpr, thresholds = roc_curve(y_true, y_pred)
         specificity_sensitivity_sum = tpr + (1 - fpr)
         ind_max = np.argmax(specificity_sensitivity_sum)
@@ -308,12 +304,12 @@ if __name__ == "__main__":
         ax1[i].plot([0, 1], [0, 1], 'k', alpha=0.5, linestyle='--')
         ax1[i].plot(fpr, tpr, color= palette[0],linestyle='-', label='%s (AUC: %.2f)' % (LLRmodelNA[0:4],AUC))
         ###### PDL1 model
-        y_pred = y_pred_PDL1[i]
+        y_pred = y_pred_PDL1[i+1]
         fpr, tpr, thresholds = roc_curve(y_true, y_pred)
         AUC = auc(fpr, tpr)
         ax1[i].plot(fpr, tpr, color= palette[2],linestyle='-', label='PDL1 (AUC: %.2f)' % (AUC))
         ###### TMB model
-        y_pred = y_pred_TMB[i]
+        y_pred = y_pred_TMB[i+1]
         fpr, tpr, thresholds = roc_curve(y_true, y_pred)
         AUC = auc(fpr, tpr)
         ax1[i].plot(fpr, tpr, color= palette[3],linestyle='-', label='TMB (AUC: %.2f)' % (AUC))
@@ -334,25 +330,25 @@ if __name__ == "__main__":
 
     ############# Plot PRC curves ##############
     output_fig1 = '../03.Results/NSCLC_'+LLRmodelNA+'_PDL1_TMB_PRC_compare_on_nonNSCLC.pdf'
-    ax1 = [0] * 4
-    fig1, ((ax1[0], ax1[1], ax1[2], ax1[3])) = plt.subplots(1, 4, figsize=(6.5, 1.5))
+    ax1 = [0] * 3
+    fig1, ((ax1[0], ax1[1], ax1[2])) = plt.subplots(1, 3, figsize=(5.5, 1.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.35)
 
-    for i in range(4):
-        y_true = y_test_list[i]
+    for i in range(3):
+        y_true = y_test_list[i+1]
         ###### LLR6 model
-        y_pred = y_pred_LLR6[i]
+        y_pred = y_pred_LLR6[i+1]
         prec, recall, _ = precision_recall_curve(y_true, y_pred) # , pos_label=clf.classes_[1]
         AUPRC, _ = AUPRC_calculator(y_true, y_pred)
         ax1[i].plot([0, 1], [sum(y_true)/len(y_true), sum(y_true)/len(y_true)], 'k', alpha=0.5, linestyle='--')
         ax1[i].plot(recall, prec, color= palette[0],linestyle='-', label='LLR6 (AUC: %.2f)' % (AUPRC))
         ###### PDL1 model
-        y_pred = y_pred_PDL1[i]
+        y_pred = y_pred_PDL1[i+1]
         prec, recall, _ = precision_recall_curve(y_true, y_pred)  # , pos_label=clf.classes_[1]
         AUPRC, _ = AUPRC_calculator(y_true, y_pred)
         ax1[i].plot(recall, prec, color= palette[2],linestyle='-', label='PDL1 (AUC: %.2f)' % (AUPRC))
         ###### TMB model
-        y_pred = y_pred_TMB[i]
+        y_pred = y_pred_TMB[i+1]
         prec, recall, _ = precision_recall_curve(y_true, y_pred)  # , pos_label=clf.classes_[1]
         AUPRC, _ = AUPRC_calculator(y_true, y_pred)
         ax1[i].plot(recall, prec, color= palette[3],linestyle='-', label='TMB (AUC: %.2f)' % (AUPRC))
@@ -369,106 +365,4 @@ if __name__ == "__main__":
         ax1[i].spines['top'].set_visible(False)
 
     fig1.savefig(output_fig1) # , dpi=300
-    plt.close()
-
-    ############# Plot confusion matrix ##############
-    diplay_ratio = 1
-    output_fig1 = '../03.Results/NSCLC_'+LLRmodelNA+'_PDL1_TMB_CM_compare_on_nonNSCLC.pdf'
-    fig1, axes = plt.subplots(3, 4, figsize=(6.5, 6.5))
-    fig1.subplots_adjust(left=0.05, bottom=0.05, right=0.97, top=0.96, wspace=0.4, hspace=0.5)
-
-    for i in range(4):
-        y_true = y_test_list[i]
-        ###### LLR6 model
-        y_pred = y_pred_LLR6[i]
-        if fix_cutoff:
-            score = cutoff_value_LLR6
-        else:
-            AUC, score = AUC_calculator(y_true, y_pred)
-        y_pred_01 = [int(c >= score) for c in y_pred]
-        cf_matrix = confusion_matrix(y_true, y_pred_01)
-        if diplay_ratio:
-            cf_matrix = np.array([[cf_matrix[0,0]/sum(cf_matrix[0]),cf_matrix[0,1]/sum(cf_matrix[0])], [cf_matrix[1,0]/sum(cf_matrix[1]),cf_matrix[1,1]/sum(cf_matrix[1])]])
-        disp = ConfusionMatrixDisplay(cf_matrix, display_labels=['NR', 'R'])
-        disp.plot(ax=axes[0][i],cmap=plt.cm.Blues) # , xticks_rotation=45
-        disp.im_.set_clim(0, 1)
-        disp.im_.colorbar.remove()
-        disp.ax_.set_xlabel('')
-        disp.ax_.set_ylabel('')
-        ###### PDL1 model
-        y_pred = y_pred_PDL1[i]
-        if fix_cutoff:
-            score = cutoff_value_PDL1
-        else:
-            AUC, score = AUC_calculator(y_true, y_pred)
-        y_pred_01 = [int(c >= score) for c in y_pred]
-        disp = ConfusionMatrixDisplay.from_predictions(y_true, y_pred_01, normalize='true', include_values = False, display_labels=['NR', 'R'])
-        disp.plot(ax=axes[1][i],cmap=plt.cm.Blues)  # , xticks_rotation=45
-        disp.im_.set_clim(0, 1)
-        if i<30:
-            disp.im_.colorbar.remove()
-        disp.ax_.set_xlabel('')
-        disp.ax_.set_ylabel('')
-        ###### TMB model
-        y_pred = y_pred_TMB[i]
-        AUC, score = AUC_calculator(y_true, y_pred)
-        if not fix_cutoff:
-            AUC, score = AUC_calculator(y_true, y_pred)
-        else:
-            score = cutoff_value_TMB
-        y_pred_01 = [int(c >= score) for c in y_pred]
-        cf_matrix = confusion_matrix(y_true, y_pred_01)
-        if diplay_ratio:
-            cf_matrix = np.array([[cf_matrix[0,0]/sum(cf_matrix[0]),cf_matrix[0,1]/sum(cf_matrix[0])], [cf_matrix[1,0]/sum(cf_matrix[1]),cf_matrix[1,1]/sum(cf_matrix[1])]])
-        disp = ConfusionMatrixDisplay(cf_matrix, display_labels=['NR', 'R'])
-        disp.plot(ax=axes[2][i],cmap=plt.cm.Blues)  # , xticks_rotation=45
-        disp.im_.set_clim(0, 1)
-        disp.im_.colorbar.remove()
-        disp.ax_.set_xlabel('')
-        disp.ax_.set_ylabel('')
-
-    fig1.savefig(output_fig1) # , dpi=300
-    plt.close()
-
-    ############# Plot metrics barplot ##############
-    output_fig_fn = '../03.Results/NSCLC_'+LLRmodelNA+'_MultipleMetricComparison_on_nonNSCLC.pdf'
-    plt.figure(figsize=(6.5, 4.5))
-    ax1 = [0] * 6
-    fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 4))
-    fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.45, hspace=0.55)
-    barWidth = 0.2
-    color_list = [palette[0], palette[2], palette[3]]
-    modelNA_list = ['LLR6', 'PDL1', 'TMB']
-    metricsNA_list = ['Accuracy', 'F1 score','Odds ratio','Specificity','PPV','NPV']  # 'Sensitivity'
-    LLR6_data = [Accuracy_LLR6, F1_LLR6, OddsRatio_LLR6, Specificity_LLR6, PPV_LLR6, NPV_LLR6] # Sensitivity_LLR6
-    PDL1_data = [Accuracy_PDL1, F1_PDL1, OddsRatio_PDL1, Specificity_PDL1, PPV_PDL1, NPV_PDL1]
-    TMB_data = [Accuracy_TMB, F1_TMB, OddsRatio_TMB, Specificity_TMB, PPV_TMB, NPV_TMB]
-
-    #### with training set
-    for i in range(6):
-        bh11 = ax1[i].bar(np.array([0, 1, 2, 3]) + barWidth * 1, LLR6_data[i],
-                       color=color_list[0], width=barWidth, edgecolor='k', label=modelNA_list[0])
-        bh12 = ax1[i].bar(np.array([0, 1, 2, 3]) + barWidth * 2, PDL1_data[i],
-                       color=color_list[1], width=barWidth, edgecolor='k', label=modelNA_list[1])
-        bh13 = ax1[i].bar(np.array([0, 1, 2, 3]) + barWidth * 3, TMB_data[i],
-                       color=color_list[2], width=barWidth, edgecolor='k', label=modelNA_list[2])
-
-        ax1[i].set_xticks(np.array([0, 1, 2, 3]) + barWidth * 2)
-        ax1[i].set_xticklabels([])
-        if i == 0:
-            ax1[i].legend(frameon=False, loc=(0.03, 0.9), prop={'size': textSize}, handlelength=1, ncol=3,
-                      handletextpad=0.1, labelspacing=0.2)
-        ax1[i].set_xlim([0, 4])
-        if i == 2:
-            ax1[i].set_ylim([0, 5])
-            ax1[i].set_yticks([0,1,2,3,4])
-        else:
-            ax1[i].set_ylim([0, 1])
-            ax1[i].set_yticks([0, 0.5, 1])
-        ax1[i].spines['right'].set_visible(False)
-        ax1[i].spines['top'].set_visible(False)
-        ax1[i].set_ylabel(metricsNA_list[i])
-        ax1[i].tick_params('x', length=0, width=0, which='major')
-
-    fig1.savefig(output_fig_fn) # , dpi=300
     plt.close()

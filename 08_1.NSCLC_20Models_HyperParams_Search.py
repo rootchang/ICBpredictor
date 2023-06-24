@@ -17,7 +17,6 @@ if __name__ == "__main__":
                'kNearestNeighbourhood','DNN','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3','NeuralNetwork4',
                'GaussianProcess','QuadraticDiscriminantAnalysis'] # StandardScaler (#18)
     MLM = sys.argv[1]
-    dataset = sys.argv[2] # 'Chowell', 'DFCI'
     if MLM in MLM_list1:
         SCALE = 'None'
     elif MLM in MLM_list2:
@@ -35,32 +34,19 @@ if __name__ == "__main__":
     randomSearchNumber = 10000 # 10000
 
     phenoNA = 'Response'
-    if dataset == 'Chowell':
-        model_hyperParas_fn = '../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
-            Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
-        if MLM not in ['LLR6','RF6']:
-            featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI',
-                          'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
-        else:
-            featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-        dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-        data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-        data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
-        data_train = pd.concat([data_train1,data_train2],axis=0)
-        data_train = data_train.loc[data_train['CancerType']=='NSCLC',]
-    elif dataset == 'DFCI':
-        model_hyperParas_fn = '../03.Results/NSCLC_DFCI_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
-            Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
-        if MLM not in ['LLR6', 'RF6']:
-            featuresNA = ['Sex', 'Smoking_status', 'Pack_years', 'Histology',
-                          'PDL1_TPS(%)', 'TMB', 'Chemo_before_IO','Treatment_Line_of_immunotherapy',
-                          'Performance_status', 'Age', 'Drug',
-                          'WBC', 'Neutro', 'Lymphocytes', 'Monocytes', 'Eosinophils ', 'Platelet', 'Albumin', 'NLR', 'MLR', 'PLR',
-                          'ELR', 'LA', 'LRA', 'NMR', 'ENR', 'PNR', 'NPAR', 'NAR', 'EMR', 'PMR', 'MPAR', 'MAR', 'EPAR', 'EAR', 'PAR']
-        else:
-            featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-        dataALL_fn = '../02.Input/MarkAwad_NSCLC_all_1227.xlsx'
-        data_train = pd.read_excel(dataALL_fn, sheet_name='clean', index_col=0)
+    model_hyperParas_fn = '../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+        Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
+    if MLM not in ['LLR6','RF6']:
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI',
+                      'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
+    else:
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
+    data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    data_train = pd.concat([data_train1,data_train2],axis=0)
+    data_train = data_train.loc[data_train['CancerType']=='NSCLC',]
+
     if MLM == 'LLR6':
         MLM = 'LogisticRegression'
     elif MLM == 'RF6':
