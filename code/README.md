@@ -1,4 +1,43 @@
-## Scripts and/or commands for figure reproduction
+## ICBpredictor
+
+This is a repository of scripts for reproducing the paper titled "Robust prediction of patient outcomes with immune checkpoint blockade therapy for cancer using common clinical, pathologic, and genomic features" by Chang et al.
+
+<p align="center">
+  <img src="./images/Fig1.jpg" width = "1000" alt="method" align=center />
+</p>
+
+
+Briefly, in this work, Chang et al. developed a new clinical score called the LOgistic Regression-based Immunotherapy-response Score (LORIS) using a transparent and concise 6-feature logistic regression model. LORIS outperforms previous signatures in ICB response prediction and can identify responsive patients, even those with low tumor mutational burden or tumor PD-L1 expression. Importantly, LORIS consistently predicts both objective responses and short-term and long-term survival across most cancer types. Moreover, LORIS showcases a near-monotonic relationship with ICB response probability and patient survival, enabling more precise patient stratification across the board. As the method is accurate, interpretable, and only utilizes a few readily measurable features, it may help improve clinical decision-making practices in precision medicine to maximize patient benefit. Specifically, the LORIS can be calculated as follows:
+
+(a) Pan-cancer LORIS:
+
+```
+LORIS = 1 / (1 + e^(-S))
+
+S = 0.0371 * min(TMB, 50) - 0.8775 * PSTH + 0.5382 * Albumin - 0.033 * min(NLR, 25) + 0.0049 * min(Age, 85) + CTCT - 2.0886
+
+CTCT = - 0.3323 * Bladder - 0.3323 * Breast - 0.102 * Colorectal - 0.0079 * Endometrial + 0.55 * Esophageal + 0.2306 * Gastric
+    + 0.0678 * Head&Neck - 0.1189 * Hepatobiliary - 0.0086 * Melanoma + 0.1255 * Mesothelioma + 0.0008 * NSCLC
+    - 0.052 * Ovarian - 1.1169 * Pancreatic + 0.5451 * Renal + 0.0542 * Sarcoma - 0.0033 * SCLC
+```
+
+where PSTH is a patient’s systemic therapy history (if a patient received chemotherapy or targeted therapy before ICB therapy, its value is 1, otherwise its value is 0); CTCT is the cancer type calibration term (for a patient, the value of the cancer type he/she has been diagnosed is 1, all other cancer types are 0). 
+
+Other features: TMB, measured by panel sequencing (mut/Mb, typical value range 0-50); Albumin (g dL-1); NLR, ratio between absolute counts of blood neutrophils and lymphocytes. 
+
+
+(b) NSCLC-specific LORIS:
+
+
+```
+LORIS = 1 / (1 + e^(-S))
+
+S = 0.0353 * min(TMB, 50) + 0.0111*PDL1 - 0.375 * PSTH + 0.2924 * Albumin - 0.0103 * min(NLR, 25) - 1.5593
+```
+
+Features: PDL1, PD-L1 tumor proportion score (%, value range 0-100).
+
+## Scripts
 
 ### 1. Pan-cancer cohort cancer type composition pie plot
 
@@ -97,3 +136,12 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 ### 12. Pan-cancer formula for LORIS calculation
 
 `12.Formula_LORIS.py`
+
+
+
+## Citation
+
+
+
+## Contact
+changtiangen@gmail.com
