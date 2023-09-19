@@ -140,7 +140,9 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 
 ## Citation
-
+Robust prediction of patient outcomes with immune checkpoint blockade therapy for cancer using common clinical, pathologic, and genomic features
+Tian-Gen Chang, Yingying Cao, Hannah J. Sfreddo, Saugato Rahman Dhruba, Se-Hoon Lee, Cristina Valero, Seong-Keun Yoo, Diego Chowell, Luc G. T. Morris, Eytan Ruppin
+bioRxiv 2023.07.04.547697; doi: https://doi.org/10.1101/2023.07.04.547697
 
 
 ## Contact
