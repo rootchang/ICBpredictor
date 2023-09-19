@@ -1,19 +1,26 @@
+###############################################################################################
+#Aim: Hyper-parameter search
+#Description: To search the optimal parameters for pan-cancer machine learning models.
+#
+#Run command, e.g.: python 05_1.PanCancer_20Models_HyperParams_Search.py DecisionTree 1
+###############################################################################################
+
+
 import time
 import sys
 import pandas as pd
 from collections import Counter
 import utils2
 
+
 if __name__ == "__main__":
     start_time = time.time()
 
     ############################################## 0. Parameters setting ##############################################
-    MLM_list1=['RF6', 'DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
-               'BernoulliNaiveBayes'] # None (#6)
+    MLM_list1=['DecisionTree', 'RandomForest'] # data scaling: None
     MLM_list2=['LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost', 'LightGBM',
-               'SupportVectorMachineLinear','SupportVectorMachinePoly','SupportVectorMachineRadial',
-               'kNearestNeighbourhood','DNN','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3','NeuralNetwork4',
-               'GaussianProcess','QuadraticDiscriminantAnalysis'] # StandardScaler (#18)
+               'SupportVectorMachineRadial','kNearestNeighbourhood','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3',
+               'NeuralNetwork4','GaussianProcess'] # StandardScaler
     MLM = sys.argv[1]
     if MLM in MLM_list1:
         SCALE = 'None'
@@ -28,20 +35,17 @@ if __name__ == "__main__":
     CPU_num = 8
     N_repeat_KFold = 1
     info_shown = 1
-    Kfold = 5 # 5
-    randomSearchNumber = 10000 # 10000
-    model_hyperParas_fn = '../03.Results/16features/PanCancer/ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(Kfold)+'Rep'+str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
+    Kfold = 5
+    randomSearchNumber = 10000
+    model_hyperParas_fn = '../../03.Results/16features/PanCancer/ModelParaSearchResult_' + MLM + '_Scaler(' + \
+                          SCALE + ')_CV' + str(Kfold)+'Rep'+str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     model_hyperParas_fh = open(model_hyperParas_fn,'w')
     phenoNA = 'Response'
-    if MLM == 'RF6':
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', "CancerType_grouped"]  ## all 16 features
-        MLM = 'RandomForest'
-    else:
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age','Drug', 'Sex', 'MSI', 'Stage',
-                      'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
-                      'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
-                      'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                      'CancerType14', 'CancerType15', 'CancerType16'] ## all 16 features
+    featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age','Drug', 'Sex', 'MSI', 'Stage',
+                  'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
+                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
+                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
+                  'CancerType14', 'CancerType15', 'CancerType16'] ## all 16 features
     xy_colNAs = featuresNA + [phenoNA]
     cat_features = []
 

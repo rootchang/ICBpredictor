@@ -1,3 +1,15 @@
+###############################################################################################
+#Aim: coefs. and intercepts for the LLR models
+#Description: To determine the coefs. and intercepts of the
+#             1) pan-cancer LLR6 model using all patients,
+#             2) pan-cancer LLR5noChemo model using all patients,
+#             3) pan-cancer LLR6 model using non-NSCLC patients
+#             with 10k-repeat train-test splitting (80%:20%).
+#
+#Run command, e.g.: python 05_5.PanCancer_LLRx_ParamCalculate.py LLR6 all
+###############################################################################################
+
+
 import sys
 import time
 import pandas as pd
@@ -13,15 +25,17 @@ from scipy import stats
 from sklearn import metrics
 
 def performance_calculator(y_true, y_pred):
-    # Calculate AUC
     auc = metrics.roc_auc_score(y_true, y_pred)
-    # Calculate PR-AUC
     pr_auc = metrics.average_precision_score(y_true, y_pred)
-    # Calculate F1 score
-    f1_score = metrics.f1_score(y_true, y_pred)
-    # Calculate accuracy
-    accuracy = metrics.accuracy_score(y_true, y_pred)
-    # Calculate geometric mean
+    fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred)
+    specificity_sensitivity_sum = tpr + (1 - fpr)
+    ind_max = np.argmax(specificity_sensitivity_sum)
+    if ind_max < 0.5:
+        ind_max = 1
+    opt_cutoff = thresholds[ind_max]
+    y_pred_01 = [int(c >= opt_cutoff) for c in y_pred]
+    f1_score = metrics.f1_score(y_true, y_pred_01)
+    accuracy = metrics.accuracy_score(y_true, y_pred_01)
     performance = (auc * pr_auc * f1_score * accuracy)**(1/4)
     return performance
 
@@ -29,14 +43,15 @@ def performance_calculator(y_true, y_pred):
 if __name__ == "__main__":
     start_time = time.time()
 
-    CPU_num = int(sys.argv[1])  # -1
-    randomSeed = int(sys.argv[2]) # 1
-    resampleNUM = int(sys.argv[3]) # 10000
-    train_size = float(sys.argv[4]) # 0.8
+    CPU_num = -1
+    randomSeed = 1
+    resampleNUM = 10000
+    train_size = 0.8
 
     phenoNA = 'Response'
-    LLRmodelNA = 'LLR6' # 'LR16'   'LLR6'   'LLR5noTMB'   'LLR5noChemo'
-    train_sample_size_used = int(sys.argv[5]) # use how many samples to train the LLR6
+    LLRmodelNA = sys.argv[1]  # 'LLR6'   'LLR5noChemo'
+    cancer_type = sys.argv[2]  # 'all'   'nonNSCLC'
+    train_sample_size_used = 10000 # use how many samples to train the LLR6
 
     if LLRmodelNA == 'LR16':
         featuresNA6_LR = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
@@ -59,6 +74,8 @@ if __name__ == "__main__":
                           'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                           'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                           'CancerType14', 'CancerType15', 'CancerType16']  # noChemo
+    elif LLRmodelNA == 'LLR5noCancer':
+        featuresNA6_LR = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']  # noCancer
     xy_colNAs = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
                   'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
                   'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
@@ -66,10 +83,10 @@ if __name__ == "__main__":
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA] + ['CancerType']
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    # dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
-    # dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)
+    if cancer_type == 'nonNSCLC':
+        dataChowell_Train0 = dataChowell_Train0.loc[dataChowell_Train0['CancerType']!='NSCLC',:]
     dataChowell_Train0 = dataChowell_Train0[xy_colNAs]
     dataChowell_Train = copy.deepcopy(dataChowell_Train0)
     if train_sample_size_used > dataChowell_Train.shape[0]:
@@ -95,8 +112,8 @@ if __name__ == "__main__":
 
     ############## 10000-replicate random data splitting for model training and evaluation ############
     LLR_params10000 = [[], [], [], [], []]  # norm_mean, norm_std, coefs, interc, p-val
-    param_dict_LLR = {'solver': 'saga', 'penalty': 'elasticnet', 'l1_ratio': 1, 'class_weight': 'balanced', 'C': 0.1, 'random_state': randomSeed}
-
+    param_dict_LLR = {'solver': 'saga', 'penalty': 'elasticnet', 'l1_ratio': 1, 'class_weight': 'balanced', 'C': 0.1,
+                      'random_state': randomSeed}
     test_size = 1 - train_size
     AUC_score_train = []
     AUC_score_test = []
@@ -117,15 +134,15 @@ if __name__ == "__main__":
 
         ############# Logistic LASSO Regression model #############
         clf = linear_model.LogisticRegression(**param_dict_LLR).fit(x_train6LR, y_train)
-        y_test_pred  = clf.predict(x_test6LR)
+        y_test_pred  = clf.predict_proba(x_test6LR)[:,1]
         try:
             performance_test.append(performance_calculator(y_test, y_test_pred))
         except:
-            1
+            print('resampling=%d: error in performance_calculator'%(resampling_i+1))
         LLR_params10000[2].append(list(clf.coef_[0]))
         LLR_params10000[3].append(list(clf.intercept_))
 
-        predictions = clf.predict(x_train6LR)
+        predictions = clf.predict_proba(x_train6LR)[:,1]
         params = np.append(clf.intercept_, clf.coef_)
         newX = np.append(np.ones((len(x_train6LR), 1)), x_train6LR, axis=1)
         MSE = (sum((y_train - predictions) ** 2)) / (len(newX) - len(newX[0]))
@@ -140,10 +157,10 @@ if __name__ == "__main__":
     performance_test_mean = np.mean(performance_test)
     performance_test_std = np.std(performance_test)
     if train_ratio_used < 0.99999:
-        fnOut = open('../03.Results/6features/PanCancer/PanCancer_' + LLRmodelNA + '_TrainSize' + str(train_sample_size_used)
+        fnOut = open('../../03.Results/6features/PanCancer/PanCancer_' + LLRmodelNA + '_TrainSize' + str(train_sample_size_used)
                      + '_10k_ParamCalculate.txt', 'w', buffering=1)
     else:
-        fnOut = open('../03.Results/6features/PanCancer/PanCancer_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
+        fnOut = open('../../03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
                      buffering=1)
     for i in range(5):
         LLR_params10000[i] = list(zip(*LLR_params10000[i]))

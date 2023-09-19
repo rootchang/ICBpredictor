@@ -1,8 +1,8 @@
 ###############################################################################################
-Aim: Characteristics of patients in the study
-
-To make a table showing statistics of patient's characteristics in the study.
+Aim: Characterization of ICB-treated patients in the study
+Description: To make a table showing statistics of ICB-treated patient's characteristics in the study (Table 1).
 ###############################################################################################
+
 
 # load required package
 ```{r}
@@ -13,8 +13,8 @@ library(readxl)
 
 # Set parameters and directories
 ```{r}
-input_dir = "../02.Input/"
-result_dir = "../03.Results/"
+input_dir = "../../02.Input/"
+result_dir = "../../03.Results/"
 
 ```
 

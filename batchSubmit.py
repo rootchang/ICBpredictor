@@ -1,31 +1,34 @@
-s############################################################################################################
+############################################################################################################
 # Submit batch jobs to server for model hyperparameter search and/or evaluation.
 ############################################################################################################
 
 import os
 import sys
 
+
 RAND = sys.argv[1] # 1
 TASK = sys.argv[2] # 'PS'  'PE'  'NS'  'NE'
 
-# MLM_list = ['DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
-#              'BernoulliNaiveBayes', 'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost',
-#              'LightGBM', 'SupportVectorMachineLinear', 'SupportVectorMachinePoly', 'SupportVectorMachineRadial',
-#              'kNearestNeighbourhood', 'DNN', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4',
-#              'GaussianProcess', 'QuadraticDiscriminantAnalysis']  # StandardScaler (#18)
-MLM_list = ['TMB', 'LLR6', 'RF6', 'DecisionTree', 'RandomForest', 'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost',
-             'LightGBM', 'SupportVectorMachineRadial',
-             'kNearestNeighbourhood', 'DNN', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4',
-             'GaussianProcess']
+if TASK in ['PS', 'NS']:
+    MLM_list = ['DecisionTree', 'RandomForest','LogisticRegression', 'GBoost', 'AdaBoost',
+                'HGBoost', 'XGBoost', 'LightGBM', 'SupportVectorMachineRadial','kNearestNeighbourhood',
+                 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4', 'GaussianProcess']
+elif TASK == 'PE':
+    MLM_list = ['TMB', 'LLR6', 'LLR5noTMB', 'RF6', 'RF16_NBT', 'DecisionTree', 'RandomForest',
+                'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'LightGBM',
+                'SupportVectorMachineRadial','kNearestNeighbourhood', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3',
+                'NeuralNetwork4','GaussianProcess']
+elif TASK == 'NE':
+    MLM_list = ['TMB', 'LLR6', 'LLR5noTMB', 'RF6', 'RF16_NBT', 'DecisionTree', 'RandomForest',
+                'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'LightGBM',
+                'SupportVectorMachineRadial','kNearestNeighbourhood', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3',
+                'NeuralNetwork4','GaussianProcess']
 
-MLM_list1 = ['TMB', 'RF6', 'DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
-             'BernoulliNaiveBayes']  # None (#6)
-MLM_list2 = ['LLR6', 'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost', 'LightGBM',
-             'SupportVectorMachineLinear', 'SupportVectorMachinePoly', 'SupportVectorMachineRadial',
-             'kNearestNeighbourhood', 'DNN', 'NeuralNetwork1', 'NeuralNetwork2', 'NeuralNetwork3', 'NeuralNetwork4',
-             'GaussianProcess', 'QuadraticDiscriminantAnalysis']  # StandardScaler (#18)
-
-
+MLM_list1 = ['TMB', 'RF6', 'RF16_NBT', 'DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
+             'BernoulliNaiveBayes']  # data scaling: None
+MLM_list2 = ['LLR6', 'LLR5noTMB', 'LogisticRegression', 'GBoost', 'AdaBoost', 'HGBoost','XGBoost', 'CatBoost',
+             'LightGBM', 'SupportVectorMachineRadial','kNearestNeighbourhood', 'NeuralNetwork1', 'NeuralNetwork2',
+             'NeuralNetwork3', 'NeuralNetwork4','GaussianProcess']  # StandardScaler
 
 ################################################## PanCancer ##################################################
 if TASK in ['PS', 'PE']:
@@ -34,8 +37,8 @@ if TASK in ['PS', 'PE']:
             data_scale = 'None'
         else:
             data_scale = 'StandardScaler'
-        jobNA = method+'_'+data_scale+'_'+RAND+'.run'
-        foutNA = 'slurm-'+method+'_'+data_scale+'_'+RAND+'.out'
+        jobNA = method+'_'+data_scale+'_'+RAND+'_Pan.run'
+        foutNA = 'slurm-'+method+'_'+data_scale+'_'+RAND+'_Pan.out'
         command = 'sbatch --job-name='+jobNA+' --output='+foutNA+' --export=TASK='+TASK+',MLM='+method+',RAND='+RAND+' jobscript.sh'
         print(command)
         os.system(command)
@@ -48,8 +51,8 @@ if TASK in ['NS', 'NE']:
                 data_scale = 'None'
             else:
                 data_scale = 'StandardScaler'
-            jobNA = method+'_'+data_scale+'_'+DATA+'_'+RAND+'.run'
-            foutNA = 'slurm-'+method+'_'+data_scale+'_'+DATA+'_'+RAND+'.out'
+            jobNA = method+'_'+data_scale+'_'+DATA+'_'+RAND+'_NSCLC.run'
+            foutNA = 'slurm-'+method+'_'+data_scale+'_'+DATA+'_'+RAND+'_NSCLC.out'
             command = 'sbatch --job-name='+jobNA+' --output='+foutNA+' --export=TASK='+TASK+',MLM='+method+',DATA='+DATA+',RAND='+RAND+' jobscript.sh'
             print(command)
             os.system(command)

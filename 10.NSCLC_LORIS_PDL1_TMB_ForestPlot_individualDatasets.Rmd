@@ -1,3 +1,10 @@
+###############################################################################################
+Aim: Predict survival of NSCLC patients using different models
+Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
+LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
+(Fig. 6d,e, Extended Data Fig. 10b,c, 11b,c)
+###############################################################################################
+
 
 # load required package
 ```{r}
@@ -25,17 +32,17 @@ my.cols <- c("#7CD5C8FF", "#507D41FF", "#DF8F44FF", "#6A6599FF", "#CB7C77FF", "#
 
 # Set parameters and directories
 ```{r}
-input_dir = "../02.Input/"
-result_dir = "../03.Results/"
+input_dir = "../../02.Input/"
+result_dir = "../../03.Results/"
 
-LLRmodelNA = 'LLR6' # 'LLR6'  'LLR5noTMB'   'LLR5noChemo'
+LLRmodelNA = 'LLR6' # 'LLR2'   'LLR6Pan'
 
 if (LLRmodelNA=='LLR6'){
   absoluteCutoff = 0.44
-}else if (LLRmodelNA=='LLR5noTMB'){
-  absoluteCutoff = 0.48
-}else if (LLRmodelNA=='LLR5noChemo'){
-  absoluteCutoff = 0.43
+}else if (LLRmodelNA=='LLR2'){
+  absoluteCutoff = 0.46
+}else if (LLRmodelNA=='LLR6Pan'){
+  absoluteCutoff = 0.5
 }
 
 
@@ -103,11 +110,11 @@ info_df$TMB_01_2 <- relevel(factor(info_df$TMB_01_2), ref = "low")
 
 # Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
 ```{r}
-survival_type = 'PFS' # 'PFS'  'OS'
-HR_type = 'Multi' # Multi Uni
+survival_type = 'OS' # 'PFS'  'OS'
+HR_type = 'Uni' # Multi Uni
 Var_type = 'binaryAbsolute' # continuous  binaryAbsolute binaryPercent
-testVAR0 = 'TMB' # LLRscore TMB PDL1
-testVAR_name = 'TMB' # LORIS    PDL1 TPS   TMB
+testVAR0 = 'LLRscore' # LLRscore TMB PDL1
+testVAR_name = 'LORIS' # LORIS    PDL1 TPS   TMB
 if (Var_type == 'binaryAbsolute'){
   testVAR = paste0(testVAR0, '_01')
 }else if (Var_type == 'binaryPercent'){

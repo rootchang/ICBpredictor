@@ -1,21 +1,26 @@
+###############################################################################################
+#Aim: Hyper-parameter search
+#Description: To search the optimal parameters for NSCLC-specific machine learning models.
+#
+#Run command, e.g.: python 08_1.NSCLC_20Models_HyperParams_Search.py DecisionTree 1
+###############################################################################################
+
+
 import time
 import sys
 import pandas as pd
 from collections import Counter
-
 import utils2
+
 
 if __name__ == "__main__":
     start_time = time.time()
 
-
     ############################################## 0. Parameters setting ##############################################
-    MLM_list1=['RF6', 'DecisionTree', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes', 'GaussianNaiveBayes',
-               'BernoulliNaiveBayes'] # None (#6)
-    MLM_list2=['LLR6', 'LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost', 'LightGBM',
-               'SupportVectorMachineLinear','SupportVectorMachinePoly','SupportVectorMachineRadial',
-               'kNearestNeighbourhood','DNN','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3','NeuralNetwork4',
-               'GaussianProcess','QuadraticDiscriminantAnalysis'] # StandardScaler (#18)
+    MLM_list1=['RF6', 'DecisionTree', 'RandomForest'] # data scaling: None
+    MLM_list2=['LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost', 'CatBoost', 'LightGBM',
+               'SupportVectorMachineRadial','kNearestNeighbourhood','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3',
+               'NeuralNetwork4','GaussianProcess'] # StandardScaler
     MLM = sys.argv[1]
     if MLM in MLM_list1:
         SCALE = 'None'
@@ -24,32 +29,30 @@ if __name__ == "__main__":
     else:
         raise Exception('MLM not recognized!')
     try:
-        randomSeed = int(sys.argv[3])
+        randomSeed = int(sys.argv[2])
     except:
         randomSeed = 1
     CPU_num = -1
     N_repeat_KFold = 1
     info_shown = 1
-    Kfold = 5 # 5
-    randomSearchNumber = 10000 # 10000
+    Kfold = 5
+    randomSearchNumber = 10000
 
     phenoNA = 'Response'
-    model_hyperParas_fn = '../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+    model_hyperParas_fn = '../../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
         Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
-    if MLM not in ['LLR6','RF6']:
+    if MLM not in ['RF6']:
         featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI',
                       'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
     else:
         featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
     data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
     data_train = pd.concat([data_train1,data_train2],axis=0)
     data_train = data_train.loc[data_train['CancerType']=='NSCLC',]
 
-    if MLM == 'LLR6':
-        MLM = 'LogisticRegression'
-    elif MLM == 'RF6':
+    if MLM == 'RF6':
         MLM = 'RandomForest'
     xy_colNAs = featuresNA + [phenoNA]
     data_train = data_train[xy_colNAs].dropna()

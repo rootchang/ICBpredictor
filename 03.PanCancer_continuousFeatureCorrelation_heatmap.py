@@ -1,3 +1,11 @@
+###############################################################################################
+#Aim: Correlation between continuous features
+#Description: To make heatmap showing correlation between continuous features (Fig. 1b).
+#
+#Run command: python 03.PanCancer_continuousFeatureCorrelation_heatmap.py
+###############################################################################################
+
+
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -11,7 +19,7 @@ plt.rcParams['font.size'] = fontSize
 plt.rcParams["font.family"] = "Arial"
 
 print('Raw data read in ...')
-data_survival_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
+data_survival_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
 data_survival_Train = pd.read_excel(data_survival_fn, sheet_name='Chowell2015-2017', index_col=0)
 data_survival_Test1 = pd.read_excel(data_survival_fn, sheet_name='Chowell2018', index_col=0)
 data_survival_Test2 = pd.read_excel(data_survival_fn, sheet_name='Morris_new', index_col=0)
@@ -62,7 +70,7 @@ for i in range(corr_out.shape[1]):
         if mask[i, j]:
             corr, pval = spearmanr(data_continuous_features.iloc[:,i], data_continuous_features.iloc[:,j], nan_policy='omit')
             p_list.append(pval)
-# adjusting p-values with multipletests
+# adjusting p-values with multiple tests
 adjusted_p_values = multipletests(p_list, method='bonferroni')[1] # bonferroni   fdr_bh
 # add significance symbols
 count = 0
@@ -88,6 +96,6 @@ for i in range(len(corr_out.columns)):
 # show the plot
 plt.xticks([])
 plt.yticks([])
-output_fig1 = '../03.Results/Figure1B_corHeatmap_pancancer.pdf' # png
-plt.savefig(output_fig1, transparent = True) # , dpi=300
+output_fig = '../../03.Results/corHeatmap_pancancer.pdf' # png
+plt.savefig(output_fig, transparent = True) # , dpi=300
 plt.close()
