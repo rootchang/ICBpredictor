@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Machine learning model evaluation result
 #Description: Get statistical result of machine learning model performance from the 2000-repeated 5-fold cross
-# validation (Extended Data Tables 1,2).
+# validation (Extended Data Table 1; Supplementary Table 1).
 #
 #Run command: python 05_4.PanCancer_20Models_evaluation_stat.py
 ###############################################################################################
@@ -51,12 +51,12 @@ for MLM in MLM_list:
     else:
         raise Exception('MLM not recognized!')
     if MLM in ['LLR6', 'LR5noTMB', 'RF6', 'TMB']:
-        fnIn = '../../03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+        fnIn = '../03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
             Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     elif MLM in ["TabNet"]:
-        fnIn = '../../03.Results/16features/PanCancer/' + MLM + '_evaluation_2000R5CV_result.txt'
+        fnIn = '../03.Results/16features/PanCancer/' + MLM + '_evaluation_2000R5CV_result.txt'
     else:
-        fnIn = '../../03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+        fnIn = '../03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
             Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     if MLM not in ["TabNet"]:
         dataIn = open(fnIn, 'r').readlines()
@@ -111,8 +111,8 @@ for MLM in MLM_list:
     performance_df = pd.concat([performance_df, temp_df], axis=0)
 
 ##### stat and write to file
-fnOut_test = '../../03.Results/PanCancer_20Models_Performance_test.xlsx'
-fnOut_delta = '../../03.Results/PanCancer_20Models_Performance_delta.xlsx'
+fnOut_test = '../03.Results/PanCancer_20Models_Performance_test.xlsx'
+fnOut_delta = '../03.Results/PanCancer_20Models_Performance_delta.xlsx'
 # Group by 'method' and calculate mean and std for each metric
 grouped = performance_df.groupby('method').agg({
     'AUC_test': ['mean', 'std'],

@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: NSCLC-specific LLR6 vs. Pan-cancer LLR6 comparison
 #Description: AUC comparison between NSCLC-specific LLR6 vs. Pan-cancer LLR6 on training and multiple test sets.
-#             (Extended Data Fig. 10a)
+#             (Extended Data Fig. 5a)
 #Run command, e.g.: python 09_3.NSCLC_vs_PanCancer_LLR6_ROC_AUC.py
 ###############################################################################################
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
               'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
     dataChowell = pd.concat([dataChowellTrain,dataChowellTest],axis=0)
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
 
     ###################### Read in LLR6_NSCLC and LLR6_PanCancer model params ######################
-    fnIn = '../../03.Results/16features/NSCLC/NSCLC_LLR6_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/16features/NSCLC/NSCLC_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn,'r').readlines()
     params_dict_NSCLC = {}
     for line in params_data:
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         params_val = [float(c) for c in words[1:]]
         params_dict_NSCLC[param_name] = params_val
 
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict_PanCancer = {}
     for line in params_data:
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     textSize = 8
 
     ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/NSCLC_PanCancer_LLR6_AUC_compare.pdf'
+    output_fig1 = '../03.Results/NSCLC_PanCancer_LLR6_AUC_compare.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)

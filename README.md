@@ -1,15 +1,16 @@
 ## ICBpredictor
 
-This is a repository of scripts for reproducing the paper titled "Robust prediction of patient outcomes with immune checkpoint blockade therapy for cancer using common clinical, pathologic, and genomic features" by Chang et al.
+This is a repository of scripts for reproducing the paper titled "LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic, and genomic features" by Chang et al.
 
 <p align="center">
   <img src="./images/Fig1.jpg" width = "1000" alt="method" align=center />
 </p>
+<b>Figure: Overview of this work</b>. <b>a</b>. The data. <b>b</b>. Model building, training, and evaluation. <b>c</b>. LORIS facilitates the estimation of ICB efficacy for individual patients.
 
 
 Briefly, in this work, Chang et al. developed a new clinical score called the LOgistic Regression-based Immunotherapy-response Score (LORIS) using a transparent and concise 6-feature logistic regression model. LORIS outperforms previous signatures in ICB response prediction and can identify responsive patients, even those with low tumor mutational burden or tumor PD-L1 expression. Importantly, LORIS consistently predicts both objective responses and short-term and long-term survival across most cancer types. Moreover, LORIS showcases a near-monotonic relationship with ICB response probability and patient survival, enabling more precise patient stratification across the board. As the method is accurate, interpretable, and only utilizes a few readily measurable features, it may help improve clinical decision-making practices in precision medicine to maximize patient benefit. Specifically, the LORIS can be calculated as follows:
 
-(a) Pan-cancer LORIS:
+<b>Pan-cancer LORIS</b>
 
 ```
 LORIS = 1 / (1 + e^(-S))
@@ -26,8 +27,7 @@ where PSTH is a patient’s systemic therapy history (if a patient received chem
 Other features: TMB, measured by panel sequencing (mut/Mb, typical value range 0-50); Albumin (g dL-1); NLR, ratio between absolute counts of blood neutrophils and lymphocytes. 
 
 
-(b) NSCLC-specific LORIS:
-
+<b>NSCLC-specific LORIS</b>
 
 ```
 LORIS = 1 / (1 + e^(-S))
@@ -38,6 +38,8 @@ S = 0.0353 * min(TMB, 50) + 0.0111*PDL1 - 0.375 * PSTH + 0.2924 * Albumin - 0.01
 Features: PDL1, PD-L1 tumor proportion score (%, value range 0-100).
 
 ## Scripts
+
+The enclosed scripts are designed to faithfully reproduce all the results presented in the original paper.
 
 ### 1. Pan-cancer cohort cancer type composition pie plot
 
@@ -61,6 +63,8 @@ Features: PDL1, PD-L1 tumor proportion score (%, value range 0-100).
 
 `05_2.PanCancer_20Models_evaluation.py`
 
+Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to server for model hyperparameter search and/or evaluation.
+
 `05_3.TabNet_paramSearch_evaluation.py`
 
 `05_4.PanCancer_20Models_evaluation_stat.py`
@@ -73,7 +77,7 @@ Features: PDL1, PD-L1 tumor proportion score (%, value range 0-100).
 
 `05_8.PanCancer_LLR6_RF6_TMB_thresholds_on_train.Rmd`
 
-Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to server for model hyperparameter search and/or evaluation.
+
 
 ### 6. Pan-cancer external validation of LLR6, RF6 and TMB
 
@@ -95,9 +99,11 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 `07_3.PanCancer_LORIS_ROC_AUC_nonICB_vs_ICB_OS.py`
 
-`07_4.PanCancer_LORIS_TMB_survivalAnalysis_nonICB.Rmd`
+`07_4.PanCancer_LR5noTMB_LORIS_ROC_AUC_nonICB_vs_ICB_OS.py`
 
-`07_5.PanCancer_LORIS_K-Mcurve_individualCancers_ICB.Rmd`
+`07_5.PanCancer_LORIS_TMB_survivalAnalysis_nonICB.Rmd`
+
+`07_6.PanCancer_LORIS_K-Mcurve_individualCancers_ICB.Rmd`
 
 
 ### 8. NSCLC-specific model comparison: training and evaluation of different machine-learning models
@@ -106,11 +112,12 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 `08_2.NSCLC_20Models_evaluation.py`
 
+Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to server for model hyperparameter search and/or evaluation.
+
 `08_3.NSCLC_20Models_evaluation_stat.py`
 
 `08_4.NSCLC_LLRx_10k_ParamCalculate.py`
 
-Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to server for model hyperparameter search and/or evaluation.
 
 ### 9. NSCLC-specific external validation of LLR6
 
@@ -133,7 +140,7 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 `11.NSCLC_LLR6_on_otherCancers_ROC_AUC.py`
 
-### 12. Pan-cancer formula for LORIS calculation
+### 12. Pan-cancer & NSCLC-specific formulas for LORIS calculation
 
 `12.Formula_LORIS.py`
 
@@ -142,8 +149,8 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 ## Citation
 Robust prediction of patient outcomes with immune checkpoint blockade therapy for cancer using common clinical, pathologic, and genomic features
 Tian-Gen Chang, Yingying Cao, Hannah J. Sfreddo, Saugato Rahman Dhruba, Se-Hoon Lee, Cristina Valero, Seong-Keun Yoo, Diego Chowell, Luc G. T. Morris, Eytan Ruppin
-bioRxiv 2023.07.04.547697; doi: https://doi.org/10.1101/2023.07.04.547697
+bioRxiv 2023.07.04.547697; [doi: 10.1101/2023.07.04.547697](https://doi.org/10.1101/2023.07.04.547697)
 
 
 ## Contact
-changtiangen@gmail.com
+Dr. Eytan Ruppin <eytan.ruppin@nih.gov>; Dr. Luc Morris <morrisl@mskcc.org>; Dr. Tiangen Chang <tiangen.chang@nih.gov>

@@ -2,7 +2,7 @@
 Aim: Predict survival of NSCLC patients using different models
 Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
 LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
-(Fig. 6d,e, Extended Data Fig. 10b,c, 11b,c)
+(Fig. 6d,e; Extended Data Fig. 5b,c; Supplementary Fig. 7b,c)
 ###############################################################################################
 
 
@@ -20,22 +20,12 @@ library(pROC)
 library(forestplot)
 ```
 
-# set the color scale
-```{r}
-my.cols <- c("#7CD5C8FF", "#507D41FF", "#DF8F44FF", "#6A6599FF", "#CB7C77FF", "#6B42C8FF",
-             "#C9D73DFF", "#C555CBFF", "#AED688FF", "#502E71FF", "#C49A3FFF",
-             "#42B540FF", "#0099B4FF", "#925E9FFF", 
-             "#FDAF91FF", "#AD002AFF", "#00468BFF", "#ED0000FF",
-             "#6A7DC9FF", "#D7652DFF", 
-             "#CF4C8BFF", "#5D8D9CFF", "#722E41FF", "#C8B693FF", "#C5383CFF", "#79AF97FF", "#68D359FF")
-```
-
 # Set parameters and directories
 ```{r}
-input_dir = "../../02.Input/"
-result_dir = "../../03.Results/"
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
 
-LLRmodelNA = 'LLR6' # 'LLR2'   'LLR6Pan'
+LLRmodelNA = 'LLR2' # LLR6   'LLR2'   'LLR6Pan'
 
 if (LLRmodelNA=='LLR6'){
   absoluteCutoff = 0.44
@@ -111,7 +101,7 @@ info_df$TMB_01_2 <- relevel(factor(info_df$TMB_01_2), ref = "low")
 # Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
 ```{r}
 survival_type = 'OS' # 'PFS'  'OS'
-HR_type = 'Uni' # Multi Uni
+HR_type = 'Multi' # Multi Uni
 Var_type = 'binaryAbsolute' # continuous  binaryAbsolute binaryPercent
 testVAR0 = 'LLRscore' # LLRscore TMB PDL1
 testVAR_name = 'LORIS' # LORIS    PDL1 TPS   TMB
@@ -158,14 +148,22 @@ for (ct in DataSets){
 colnames(HR_each_cancer) = c(paste0('HR_',testVAR),paste0('HR_',testVAR,'025'),paste0('HR_',testVAR,'975'),paste0('p-val_',testVAR),'No. of patients', 'DataSet')
 
 
-command_str <- paste0("HR_each_cancer = arrange(HR_each_cancer, desc(HR_",testVAR,"))") # desc(is.na(HR_",testVAR,")),
-eval(parse(text = command_str))
+
 if (testVAR0 == 'LLRscore'){
+  command_str <- paste0("HR_each_cancer = arrange(HR_each_cancer, desc(HR_",testVAR,"))") # desc(is.na(HR_",testVAR,")),
+  eval(parse(text = command_str))
   cancerOrder = HR_each_cancer$DataSet
+}else{
+  rownames(HR_each_cancer) = HR_each_cancer$DataSet
+  HR_each_cancer = HR_each_cancer[cancerOrder,]
 }
 
 
 HR_each_cancer = rbind(HR_each_cancer,HR_pancohort)
+
+write.csv(HR_each_cancer, paste0(result_dir,"source_data_efig06bcde.csv"))
+
+
 
 
 plot_data <- tibble::tibble(mean  = HR_each_cancer[[paste0('HR_',testVAR)]],
@@ -185,12 +183,8 @@ for (i in 1:length(P_value_raw)){
   pval = P_value_raw[i]
   if (pval>=0.1){
     pval_vec[i] = as.character(round(pval,2))
-  }else if (pval>=0.001){
-    pval_vec[i] = as.character(round(pval,3))
-  }else if (pval>=0.0001){
-    pval_vec[i] = as.character(round(pval,4))
   }else{
-    pval_vec[i] = '<0.0001'
+    pval_vec[i] = format(pval, scientific = TRUE, digits = 2)  # Format for scientific notation
   }
 }
 
@@ -204,7 +198,7 @@ labels_x = breaks_x
 
 fontSize = 1.2
 
-pdf_file <- paste0(result_dir,paste0("pancohort_Forest_",survival_type,"_",HR_type,"_",Var_type,"_",testVAR0,".pdf"))
+pdf_file <- paste0(result_dir,paste0("NSCLCcohorts_Forest_",survival_type,"_",HR_type,"_",Var_type,"_",LLRmodelNA,"_",testVAR0,".pdf"))
 fig_width = 5
 fig_height = 3
 pdf(pdf_file, onefile=FALSE, width = fig_width,height=fig_height)
@@ -214,16 +208,13 @@ plot_data %>%
   forestplot(labeltext = c("dataset", "size", "pval"),
              graph.pos = 3,
              boxsize = 0.35,
-             #line.margin = .30, # We need to add this to avoid crowding
              vertices = TRUE,
              clip = c(xmin_lim, xmax_lim),
              xlog = FALSE,
              zero = 1,
-             #txt_gp = fpTxtGp(cex=0.75),
              txt_gp = fpTxtGp(ticks=gpar(cex=fontSize),xlab=gpar(cex=fontSize),label=gpar(cex=fontSize),legend=gpar(cex=fontSize),title=gpar(cex=fontSize)), # label, summary, xlab, title, ticks legend
              xlab = paste0("Hazard ratio (",testVAR_name,")"),
              xticks = breaks_x,
-             #lineheight=unit(1,'cm'),
              graphwidth = unit(3, "cm"),
              lineheight = unit(2, "cm")
              ) %>%
@@ -233,7 +224,6 @@ plot_data %>%
   fp_add_header(dataset = c("Data set")|> fp_txt_plain() |> fp_align_center(),
                 size = c("Samples")|> fp_txt_plain() |> fp_align_center(), # "No. of patients"
                 pval = c("P-value")|> fp_txt_plain() |> fp_align_center())
-#par(mar=c(10, 10, 10, 10))
 
 dev.off()
 

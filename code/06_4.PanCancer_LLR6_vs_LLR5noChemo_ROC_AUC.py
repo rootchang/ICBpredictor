@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Pan-cancer LLR6 vs. LLR5(without systemic therapy history term) comparison
 #Description: AUC comparison between LLR6 vs. LLR5 on training and multiple test sets.
-#             (Extended Data Fig. 17a).
+#             (Extended Data Fig. 9a).
 #Run command, e.g.: python 06_4.PanCancer_LLR6_vs_LLR5noChemo_ROC_AUC.py
 ###############################################################################################
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
                  'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)  # Chowell2018
     dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)  # Morris_new
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     y_LLR5pred_test_list = []
 
     ###################### test LLR6 model performance ######################
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
 
     ###################### test LLR5 model performance ######################
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_LLR5noChemo_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR5noChemo_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -197,11 +197,24 @@ if __name__ == "__main__":
         pval_list.append(p1)
         print('Dataset %d: LLR6 vs LLR5 p-val: %g'%(i+1,p1))
 
-    ############################## Plot ##############################
-    textSize = 8
+    ############################## save source data for figure ##############################
+    dataset_list = []
+    true_label_list = []
+    LLR6_pred_list = []
+    LLR5_pred_list = []
+    dataset_unique = ["Chowell train","Chowell test","MSK1","MSK2","Kato et al.","Pradat et al."]
+    for i in range(6):
+        LLR6_pred_list.extend(y_LLR6pred_test_list[i])
+        LLR5_pred_list.extend(y_LLR5pred_test_list[i])
+        true_label_list.extend(y_test_list[i])
+        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i]))
+    df = pd.DataFrame({"Dataset":dataset_list, "True_label":true_label_list, "LLR6_score":LLR6_pred_list, "LLR5_score":LLR5_pred_list})
+    df.to_csv('../03.Results/source_data_efig10a.csv', index=False)
 
-    ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/PanCancer_LLR6_LLR5noChemo_ROC_compare.pdf'
+
+    ############################## Plot ROC curves ##############################
+    textSize = 8
+    output_fig1 = '../03.Results/PanCancer_LLR6_LLR5noChemo_ROC_compare.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)

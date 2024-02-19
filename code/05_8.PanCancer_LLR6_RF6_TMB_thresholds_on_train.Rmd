@@ -20,8 +20,8 @@ library(stats)
 
 # Set parameters and directories
 ```{r}
-input_dir = "../../02.Input/"
-result_dir = "../../03.Results/"
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
 
 ```
 

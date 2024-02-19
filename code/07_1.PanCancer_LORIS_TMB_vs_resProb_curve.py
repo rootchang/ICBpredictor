@@ -3,8 +3,8 @@
 #Description: Relationship between LORIS or TMB score vs. ICB objective response odds
 #             1) on all patients
 #             2) on non-NSCLC patients
-#             (Fig. 4a,b; Extended Data Fig. 14a,b).
-#Run command, e.g.: python 07_1.PanCancer_LORIS_TMB_vs_resProb_curve.py
+#             (Fig. 4a,b; Extended Data Fig. 8a,b).
+#Run command, e.g.: python 07_1.PanCancer_LORIS_TMB_vs_resProb_curve.py PanCancer_all
 ###############################################################################################
 
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     y_true = []
     start_set = 1
     end_set = 3
-    output_curve_fn = '../03.Results/LLR6_LORIS_vs_ORR_'+Plot_type+'.pdf'
+    output_curve_fn = '../03.Results/LLR6_LORIS_vs_ORR_'+Plot_type+'.png'
     for sheet_i in range(start_set,end_set): # range(start_set,3)
         data = pd.read_excel(fnIn, sheet_name=str(sheet_i), header=0, index_col=0)
         y_pred_LLR6.extend(data['y_pred'].tolist())
@@ -208,6 +208,11 @@ if __name__ == "__main__":
     for i in range(len(TMBhigh_ORR_95)):
         print(score_list_TMB[i], TMBhigh_ORR_mean[i], TMBlow_ORR_mean[i], TMB_ORR_mean[i], TMBlow_patientRatio_mean[i])
 
+    df = pd.DataFrame({'LLR6_score': score_list_LLR6, 'Prob_mean': LLR6_ORR_mean, 'Prob_lower': LLR6_ORR_05, 'Prob_upper': LLR6_ORR_95})
+    df.to_csv('../03.Results/source_data_fig05a.csv', index=False)
+    df = pd.DataFrame({'TMB': score_list_TMB, 'Prob_mean': TMB_ORR_mean, 'Prob_lower': TMB_ORR_05, 'Prob_upper': TMB_ORR_95})
+    df.to_csv('../03.Results/source_data_fig05b.csv', index=False)
+
 
     ############# Score-Prob curve ##############
     subplot_num = 2
@@ -247,5 +252,5 @@ if __name__ == "__main__":
         axes[0].axvspan(0, 0.275, facecolor='k', alpha=0.1)
         axes[0].axvspan(0.7, 1, facecolor='g', alpha=0.1)
 
-    plt.savefig(output_curve_fn)
+    plt.savefig(output_curve_fn, dpi=600)
     plt.close()

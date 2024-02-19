@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Predictive power of NSCLC-specific LLR6 on other cancer types
 #Description: ROC / AUC comparison between NSCLC-specific LLR6 vs. PDL1 vs. TMB on three other cancer types
-#             (Extended Data Fig. 18).
+#             (Fig. 7a).
 #Run command: python 11.NSCLC_LLR6_on_otherCancers_ROC_AUC.py
 ###############################################################################################
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
     dataChowell = pd.concat([dataChowellTrain, dataChowellTest], axis=0)
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     y_pred_TMB = []
 
     ###################### Read in LLR model params ######################
-    fnIn = '../../03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt'
     params_data = open(fnIn,'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -141,14 +141,33 @@ if __name__ == "__main__":
         y_pred_TMB.append(y_pred_test)
 
 
+
+    ############################## save source data for figure ##############################
+    dataset_list = []
+    true_label_list = []
+    LLR6_pred_list = []
+    PDL1_pred_list = []
+    TMB_pred_list = []
+    dataset_unique = ["Gastric","Esophageal","Mesothelioma"]
+    for i in range(3):
+        LLR6_pred_list.extend(y_pred_LLR6[i+1])
+        PDL1_pred_list.extend(y_pred_PDL1[i+1])
+        TMB_pred_list.extend(y_pred_TMB[i+1])
+        true_label_list.extend(y_test_list[i+1])
+        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i+1]))
+    df = pd.DataFrame({"Cancer_type":dataset_list, "True_label":true_label_list, "NSCLC_LLR6_score":LLR6_pred_list, "PDL1":PDL1_pred_list, "TMB":TMB_pred_list})
+    df.to_csv('../03.Results/source_data_fig08a.csv', index=False)
+
+
+
     ############################## Plot ##############################
     textSize = 8
 
     ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/NSCLC_'+LLRmodelNA+'_PDL1_TMB_ROC_compare_on_otherCancerTypes.pdf'
+    output_fig1 = '../03.Results/NSCLC_'+LLRmodelNA+'_PDL1_TMB_ROC_compare_on_otherCancerTypes.pdf'
     ax1 = [0] * 3
-    fig1, ((ax1[0], ax1[1], ax1[2])) = plt.subplots(1, 3, figsize=(5.5, 1.5))
-    fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.35)
+    fig1, ((ax1[0], ax1[1], ax1[2])) = plt.subplots(1, 3, figsize=(6.5, 1.5))
+    fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.2, hspace=0.35)
 
     for i in range(3):
         y_true = y_test_list[i+1]
@@ -174,7 +193,7 @@ if __name__ == "__main__":
         AUC = auc(fpr, tpr)
         ax1[i].plot(fpr, tpr, color= palette[3],linestyle='-', label='TMB AUC: %.2f' % (AUC))
 
-        ax1[i].legend(frameon=False, loc=(0.2,-0.04), prop={'size': textSize},handlelength=1,handletextpad=0.1,
+        ax1[i].legend(frameon=False, loc=(0.4,-0.01), prop={'size': textSize},handlelength=1,handletextpad=0.1,
                       labelspacing = 0.2)
         ax1[i].set_xlim([-0.02, 1.02])
         ax1[i].set_ylim([-0.02, 1.02])

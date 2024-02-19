@@ -37,7 +37,7 @@ if __name__ == "__main__":
     info_shown = 1
     Kfold = 5
     randomSearchNumber = 10000
-    model_hyperParas_fn = '../../03.Results/16features/PanCancer/ModelParaSearchResult_' + MLM + '_Scaler(' + \
+    model_hyperParas_fn = '../03.Results/16features/PanCancer/ModelParaSearchResult_' + MLM + '_Scaler(' + \
                           SCALE + ')_CV' + str(Kfold)+'Rep'+str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     model_hyperParas_fh = open(model_hyperParas_fn,'w')
     phenoNA = 'Response'

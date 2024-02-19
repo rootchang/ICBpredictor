@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: LLR6 vs. RF16(Chowell et al.) comparison
 #Description: AUC comparison between LLR6 vs. RF16(Chowell et al.) on training and test sets
-#             (Extended Data Fig. 3c,d).
+#             (Extended Data Fig. 2c,d).
 #Run command, e.g.: python 05_7.PanCancer_LLR6_RF16NBT_AUC_compare.py train
 ###############################################################################################
 
@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve, precision_recall_curve, roc_auc_score, average_precision_score
 from scipy.stats import norm
+from matplotlib.gridspec import GridSpec
 
 palette = sns.color_palette("deep")
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
                        "Stage", "Age", "Drug","Chemo_before_IO", "HLA_LOH", "MSI", "Sex"]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     data_RF16_train = dataChowellTrain[featuresNA_RF16 + [phenoNA]]
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     y_LLR6pred_test = []
     y_RF16pred_test = []
     ###################### test LLR6 model performance ######################
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn,'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -119,11 +120,16 @@ if __name__ == "__main__":
     p2 = delong_test(y_test_RF16, y_LLR6pred_test, y_RF16pred_test, 'PRAUC')
     print('LLR6 vs RF16 PRAUC p-val: %g' % (p2))
 
+    ################ print source data ################
+    print("True_label LLR6_score RF16_score")
+    True_label = y_test_RF16.tolist()
+    for i in range(len(True_label)):
+        print(True_label[i],y_LLR6pred_test[i],y_RF16pred_test[i])
 
     ############################## Plot ##############################
     textSize = 8
     ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/PanCancer_LLR6_vs_RF16NBT_AUC_AUPRC_compare_'+plot_train_or_test+'.pdf'
+    output_fig1 = '../03.Results/PanCancer_LLR6_vs_RF16NBT_AUC_AUPRC_compare_'+plot_train_or_test+'.pdf'
     ax1 = [0] * 2
     fig1, ((ax1[0], ax1[1])) = plt.subplots(1, 2, figsize=(3.7,1.7))
     fig1.subplots_adjust(left=0.15, bottom=0.25, right=0.97, top=0.96, wspace=0.37, hspace=0.5)
@@ -181,24 +187,80 @@ if __name__ == "__main__":
 
     ##################### correlation scatter plot between predicted scores from LLR6 and RF16 #####################
     textSize = 8
-    output_fig2 = '../../03.Results/PanCancer_LLR6_vs_RF16NBT_scoreCorrelation_scatterPlot.pdf'
-    fig2, ax2 = plt.subplots(1, 1, figsize=(2, 2))
-    fig2.subplots_adjust(left=0.27, bottom=0.25, right=0.93, top=0.96, wspace=0.35, hspace=0.5)
+    output_fig2 = '../03.Results/PanCancer_LLR6_vs_RF16NBT_scoreCorrelation_scatterPlot.pdf'
+    # fig, ax = plt.subplots(1, 1, figsize=(3, 3))
+    # fig.subplots_adjust(left=0.27, bottom=0.25, right=0.93, top=0.96, wspace=0.35, hspace=0.5)
 
-    ax2.scatter(y_LLR6pred_test, y_RF16pred_test, color='black', s=10)
-    slope, intercept, r_value, p_value, std_err = stats.linregress(y_LLR6pred_test, y_RF16pred_test)
-    ax2.plot(y_LLR6pred_test, slope * y_LLR6pred_test + intercept, color='red')
-    spearman_corr, _ = stats.spearmanr(y_LLR6pred_test, y_RF16pred_test)
+    fig = plt.figure(figsize=(3, 3))
+    gs = GridSpec(4, 4, left=0.2, bottom=0.15, right=0.96, top=0.96, wspace=0, hspace=0)
+    ax_joint = fig.add_subplot(gs[1:4, 0:3])
+    ax_marg_x = fig.add_subplot(gs[0, 0:3])
+    ax_marg_y = fig.add_subplot(gs[1:4, 3])
+
+    x=y_LLR6pred_test
+    y=y_RF16pred_test
+    ax_joint.scatter(x, y, color='black', s=10)
+    spearman_corr, _ = stats.spearmanr(x, y)
     textstr = f'r = {spearman_corr:.2f}' # \np = {p_value:.1e}
-    ax2.text(0.15, 0.8, textstr, fontsize=textSize, color='black', backgroundcolor='white')
-    ax2.set_xlabel('LLR6 score')
-    ax2.set_ylabel('RF16 score')
+    ax_joint.text(0.15, 0.8, textstr, fontsize=textSize, color='black', backgroundcolor='white')
 
-    ax2.spines['right'].set_visible(False)
-    ax2.spines['top'].set_visible(False)
-    ax2.set_xticks([0, 0.5, 1])
-    ax2.set_yticks([0, 0.5, 1])
+    binBoundaries = np.linspace(0, 100,21)/100
+    ax_marg_x.hist(x, edgecolor='black', facecolor = '0.5',linewidth=1,bins=binBoundaries)
+    ax_marg_y.hist(y, orientation="horizontal", edgecolor='black', facecolor = '0.5',linewidth=1,bins=binBoundaries)
 
-    fig2.savefig(output_fig2) # , dpi=300
+    # Turn off tick labels on marginals
+    plt.setp(ax_marg_x.get_xticklabels(), visible=False)
+    plt.setp(ax_marg_y.get_yticklabels(), visible=False)
+
+    # Set labels on joint
+    ax_joint.set_xlabel('LLR6 score')
+    ax_joint.set_ylabel('RF16 score')
+    ax_joint.set_xlim([0, 1])
+    ax_joint.set_ylim([0, 1])
+    ax_joint.set_xticks([0, 0.5, 1])
+    ax_joint.set_xticks([0, 0.5, 1])
+    ax_marg_x.set_xlim([0, 1])
+    ax_marg_y.set_ylim([0, 1])
+
+
+    # Set labels on marginals
+    # ax_marg_y.set_xlabel('Marginal x label')
+    # ax_marg_x.set_ylabel('Marginal y label')
+    ax_marg_y.spines['top'].set_visible(False)
+    ax_marg_y.spines['right'].set_visible(False)
+    ax_marg_y.spines['bottom'].set_visible(False)
+    ax_marg_x.spines['left'].set_visible(False)
+    ax_marg_x.spines['right'].set_visible(False)
+    ax_marg_x.spines['top'].set_visible(False)
+    ax_marg_x.set_yticks([])
+    ax_marg_y.set_xticks([])
+
+
+    # # Create your scatter plot
+    # pp = sns.scatterplot(x=y_LLR6pred_test, y=y_RF16pred_test, color='black', s=10, ax=ax)
+    # # Add density plot along the x-axis (top)
+    # sns.kdeplot(y_LLR6pred_test, ax=pp.twinx(), color='red', legend=False)
+    # # Add density plot along the y-axis (right)
+    # sns.kdeplot(y_RF16pred_test, ax=pp.twiny(), color='blue', legend=False)
+    # # Set labels for the density plots
+    # pp.twinx().set_ylabel("Density", color="red")
+    # pp.twiny().set_xlabel("Density", color="blue")
+
+
+    # ax2.scatter(y_LLR6pred_test, y_RF16pred_test, color='black', s=10)
+    # slope, intercept, r_value, p_value, std_err = stats.linregress(y_LLR6pred_test, y_RF16pred_test)
+    # ax2.plot(y_LLR6pred_test, slope * y_LLR6pred_test + intercept, color='red')
+    # spearman_corr, _ = stats.spearmanr(y_LLR6pred_test, y_RF16pred_test)
+    # textstr = f'r = {spearman_corr:.2f}' # \np = {p_value:.1e}
+    # ax2.text(0.15, 0.8, textstr, fontsize=textSize, color='black', backgroundcolor='white')
+    # ax2.set_xlabel('LLR6 score')
+    # ax2.set_ylabel('RF16 score')
+    #
+    # ax2.spines['right'].set_visible(False)
+    # ax2.spines['top'].set_visible(False)
+    # ax2.set_xticks([0, 0.5, 1])
+    # ax2.set_yticks([0, 0.5, 1])
+
+    fig.savefig(output_fig2) # , dpi=300
     plt.close()
 

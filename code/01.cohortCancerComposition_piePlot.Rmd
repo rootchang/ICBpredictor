@@ -9,22 +9,15 @@ Description: To make pie plots showing cancer composition of pan-cancer cohorts 
 library(data.table)
 library(ggplot2)
 library(readxl)
-```
 
-# set the color scale
-```{r}
-my.cols <- c("#7CD5C8FF", "#507D41FF", "#DF8F44FF", "#6A6599FF", "#CB7C77FF", "#6B42C8FF",
-             "#C9D73DFF", "#C555CBFF", "#AED688FF", "#502E71FF", "#C49A3FFF",
-             "#42B540FF", "#0099B4FF", "#925E9FFF", 
-             "#FDAF91FF", "#AD002AFF", "#00468BFF", "#ED0000FF",
-             "#6A7DC9FF", "#D7652DFF", 
-             "#CF4C8BFF", "#5D8D9CFF", "#722E41FF", "#C8B693FF", "#C5383CFF", "#79AF97FF", "#68D359FF")
+library(viridis)
+
 ```
 
 # Set parameters and directories
 ```{r}
-input_dir = "../../02.Input/"
-result_dir = "../../03.Results/"
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
 cutoff = 0.5
 
 ```
@@ -79,6 +72,25 @@ colnames(Pradat_cancerComposition) = c('CancerType', 'Ratio')
 MSK_nonICB_cancerComposition <- table(factor(MSK_nonICB_df$CancerType, levels = CancerTypes))
 MSK_nonICB_cancerComposition = as.data.frame(MSK_nonICB_cancerComposition)
 colnames(MSK_nonICB_cancerComposition) = c('CancerType', 'Ratio')
+
+####### pie chart colormap
+pie_chart <- ggplot(MSK_cancerComposition, aes(x="", y=Ratio, fill=CancerType)) +
+  geom_bar(stat="identity", width=1) +
+  scale_fill_manual(values = rev(my.cols))+
+  coord_polar("y", start=0)
+# Remove x and y axis labels and ticks
+pie_chart <- pie_chart +
+  theme_bw()+
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.grid=element_blank(),
+        panel.border = element_blank()) +
+  labs(x = "", y = "")
+# Save figure
+ggsave(paste0(result_dir,paste0("cancerType_piePlot_colormap.pdf")), width = 1.8*3, height = 1.8*3) # width = 2.3, height = 2.7
+
+
 
 ####### pie chart of Chowell et al.
 pie_chart <- ggplot(Chowell_cancerComposition, aes(x="", y=Ratio, fill=CancerType)) +

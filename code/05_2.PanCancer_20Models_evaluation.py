@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     ################################################# 1. Data read in #################################################
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     data_train = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     # Data truncation
     TMB_upper = 50
@@ -99,7 +99,7 @@ if __name__ == "__main__":
                     }
     ############## read-in the dictionary of optimal parameter combination from file ############
     if MLM not in ['GaussianProcess','RF16_NBT','RF6', 'TMB', 'LR5noTMB', 'LLR6']:
-        HyperParam_fnIn = '../../03.Results/16features/PanCancer/ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE +\
+        HyperParam_fnIn = '../03.Results/16features/PanCancer/ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE +\
                           ')_CV' + str(Kfold) + 'Rep' + str(N_repeat_KFold_paramTune) + '_random' + \
                           str(randomSeed) + '.txt'
         paramDict_line_str = 'Best params on CV sets:  '
@@ -160,10 +160,10 @@ if __name__ == "__main__":
         search_cv.fit(x, y)
     results_df = pd.DataFrame(search_cv.cv_results_)
     if MLM in ['LLR6', 'LR5noTMB', 'RF6', 'TMB']:
-        model_eval_fn = '../../03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + \
+        model_eval_fn = '../03.Results/6features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + \
                         str(Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     else:
-        model_eval_fn = '../../03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' +\
+        model_eval_fn = '../03.Results/16features/PanCancer/ModelEvalResult_' + MLM + '_Scaler(' + SCALE + ')_CV' +\
                     str(Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     results_df.to_csv(model_eval_fn, sep='\t')
     print('Model evaluation done! Time used: ',time.time()-start_time)

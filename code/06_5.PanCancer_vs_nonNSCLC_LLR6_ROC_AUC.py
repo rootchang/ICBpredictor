@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Pan-cancer LLR6 vs. non-NSCLC LLR6 comparison
 #Description: AUC comparison between Pan-cancer LLR6 vs. non-NSCLC LLR6 on training and multiple test sets
-#             (with only non-NSCLC patients). (Extended Data Fig. 15)
+#             (with only non-NSCLC patients). (Supplementary Fig. 7)
 #
 #Run command, e.g.: python 06_5.PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.py
 ###############################################################################################
@@ -77,7 +77,7 @@ if __name__ == "__main__":
                  'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)  # Chowell2018
     dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)  # Morris_new
@@ -95,8 +95,9 @@ if __name__ == "__main__":
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
+        #print(dataALL[i].shape)
 
-    dataALL = [c.loc[c['Chemo_before_IO'] == 1, :] for c in dataALL]
+    #dataALL = [c.loc[c['Chemo_before_IO'] == 1, :] for c in dataALL]
 
     # truncate TMB
     TMB_upper = 50
@@ -127,13 +128,13 @@ if __name__ == "__main__":
         x_test_LLR6_list.append(pd.DataFrame(c, columns=featuresNA_LLR6))
         x_test_LLR5_list.append(pd.DataFrame(c, columns=featuresNA_LLR6))
         y_test_list.append(c[phenoNA])
-
+        #print(c.shape,x_test_LLR6_list[-1].shape)
 
     y_LLR6pred_test_list = []
     y_LLR5pred_test_list = []
 
     ###################### test LLR6 model performance ######################
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_all_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -159,7 +160,7 @@ if __name__ == "__main__":
 
 
     ###################### test LLR6_nonNSCLC model performance ######################
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_nonNSCLC_LLR6_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_nonNSCLC_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -190,11 +191,24 @@ if __name__ == "__main__":
         pval_list.append(p1)
         print('Dataset %d: LLR6 vs LLR5 p-val: %g'%(i+1,p1))
 
-    ############################## Plot ##############################
-    textSize = 8
+    ############################## save source data for figure ##############################
+    dataset_list = []
+    true_label_list = []
+    LLR6_pred_list = []
+    nonNSCLC_LLR6_pred_list = []
+    dataset_unique = ["Chowell train","Chowell test","MSK1","MSK2","Kato et al.","Pradat et al."]
+    for i in range(6):
+        LLR6_pred_list.extend(y_LLR6pred_test_list[i])
+        nonNSCLC_LLR6_pred_list.extend(y_LLR5pred_test_list[i])
+        true_label_list.extend(y_test_list[i])
+        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i]))
+    df = pd.DataFrame({"Cancer_type":dataset_list, "True_label":true_label_list, "LLR6_score":LLR6_pred_list, "nonNSCLC_LLR6_score":nonNSCLC_LLR6_pred_list})
+    df.to_csv('../03.Results/source_data_sfig04a.csv', index=False)
 
-    ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.pdf'
+
+    ############################## Plot ROC curves ##############################
+    textSize = 8
+    output_fig1 = '../03.Results/PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)

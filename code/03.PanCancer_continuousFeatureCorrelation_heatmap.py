@@ -12,14 +12,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 from statsmodels.sandbox.stats.multicomp import multipletests
-
+import copy
 
 fontSize  = 8
 plt.rcParams['font.size'] = fontSize
 plt.rcParams["font.family"] = "Arial"
 
 print('Raw data read in ...')
-data_survival_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+data_survival_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
 data_survival_Train = pd.read_excel(data_survival_fn, sheet_name='Chowell2015-2017', index_col=0)
 data_survival_Test1 = pd.read_excel(data_survival_fn, sheet_name='Chowell2018', index_col=0)
 data_survival_Test2 = pd.read_excel(data_survival_fn, sheet_name='Morris_new', index_col=0)
@@ -41,6 +41,7 @@ data_all = data_all_raw[all_features]
 ################ Correlation matrix heatmap plot between continuous variables that are present in >= 2 datasets ################
 continuous_features = ['TMB', 'PDL1_TPS(%)', 'FCNA','HED', 'BMI', 'HGB', 'Albumin', 'NLR', 'Platelets', 'Age']
 data_continuous_features = data_all_raw[continuous_features]
+
 corr_out = data_continuous_features.corr(method='spearman', min_periods=1)
 # set column and row names
 corr_out.columns = data_continuous_features.columns
@@ -51,6 +52,11 @@ mask[np.triu_indices_from(mask)] = True
 # set heatmap color palette and breaks
 palette_length = 400
 my_color = sns.color_palette("RdBu_r", n_colors=palette_length)
+#my_color = plt.cm.cividis(range(palette_length))
+#my_color = my_color.tolist()
+#print(my_color)
+
+corr_out.to_csv('../03.Results/source_data_fig01b_scc.csv', index=False)
 
 # plot correlation heatmap
 fig, ax = plt.subplots(figsize=(3.5, 3.2))
@@ -73,10 +79,13 @@ for i in range(corr_out.shape[1]):
 # adjusting p-values with multiple tests
 adjusted_p_values = multipletests(p_list, method='bonferroni')[1] # bonferroni   fdr_bh
 # add significance symbols
+adjusted_p_values_out = copy.deepcopy(corr_out)
+adjusted_p_values_out.loc[:, :] = ""
 count = 0
 for i in range(corr_out.shape[1]):
     for j in range(corr_out.shape[1]-1,i,-1):
         if mask[i, j]:
+            adjusted_p_values_out.iloc[i, j] = adjusted_p_values[count]
             anno_text = '%.2f' % corr_out.iloc[i,j]
             adj_pval = adjusted_p_values[count]
             count+=1
@@ -89,6 +98,8 @@ cbar = heatmap.collections[0].colorbar
 # Set the font size and font color for the colorbar
 cbar.ax.tick_params(labelsize=8)
 
+adjusted_p_values_out.to_csv('../03.Results/source_data_fig01b_adj_pval.csv', index=False)
+
 # display the column names at the diagonal
 continuous_features_full = ['TMB', 'PD-L1 TPS', 'FCNA','HED', 'BMI', 'Hemoglobin', 'Albumin', 'NLR', 'Platelets', 'Age'] # 'White blood cells', 'Neutrophils', 'Lymphocytes','Monocytes', 'Eosinophils', 'Smoking'
 for i in range(len(corr_out.columns)):
@@ -96,6 +107,6 @@ for i in range(len(corr_out.columns)):
 # show the plot
 plt.xticks([])
 plt.yticks([])
-output_fig = '../../03.Results/corHeatmap_pancancer.pdf' # png
+output_fig = '../03.Results/corHeatmap_pancancer.pdf' # png
 plt.savefig(output_fig, transparent = True) # , dpi=300
 plt.close()

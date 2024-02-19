@@ -13,8 +13,8 @@ library(readxl)
 
 # Set parameters and directories
 ```{r}
-input_dir = "../../02.Input/"
-result_dir = "../../03.Results/"
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
 
 ```
 
@@ -73,9 +73,6 @@ print(sex_table/sum(sex_table))
 quantile(allCohorts_info_df$Age, c(0.25,0.5,0.75))
 
 # Cancer type
-# freq_ct = table(allCohorts_info_df$CancerType)
-# freq_ct_sorted <- sort(freq_ct, decreasing = TRUE)
-# freq_ct_sorted2 = freq_ct_sorted/sum(freq_ct_sorted)*100
 ct = allCohorts_info_df$CancerType
 ct_order <- c("NSCLC", "Renal", "Melanoma", "Head & Neck", "Bladder", "Sarcoma", "Gastric", "CNS", "Colorectal", "Endometrial", "Hepatobiliary", "SCLC", "Esophageal", "Pancreatic", "Mesothelioma", "Ovarian", "Breast", "Unknown primary")
 ctfactor <- factor(ct, levels = ct_order)
@@ -127,9 +124,6 @@ print(sex_table/sum(sex_table))
 quantile(Cohort_info_df$Age, c(0.25,0.5,0.75))
 
 # Cancer type
-# freq_ct = table(Cohort_info_df$CancerType)
-# freq_ct_sorted <- sort(freq_ct, decreasing = TRUE)
-# freq_ct_sorted2 = freq_ct_sorted/sum(freq_ct_sorted)*100
 ct = Cohort_info_df$CancerType
 ct_order <- c("NSCLC", "Renal", "Melanoma", "Head & Neck", "Bladder", "Sarcoma", "Gastric", "CNS", "Colorectal", "Endometrial", "Hepatobiliary", "SCLC", "Esophageal", "Pancreatic", "Mesothelioma", "Ovarian", "Breast", "Unknown primary")
 ctfactor <- factor(ct, levels = ct_order)

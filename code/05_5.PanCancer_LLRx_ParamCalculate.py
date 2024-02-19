@@ -83,7 +83,7 @@ if __name__ == "__main__":
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA] + ['CancerType']
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     if cancer_type == 'nonNSCLC':
         dataChowell_Train0 = dataChowell_Train0.loc[dataChowell_Train0['CancerType']!='NSCLC',:]
@@ -157,10 +157,10 @@ if __name__ == "__main__":
     performance_test_mean = np.mean(performance_test)
     performance_test_std = np.std(performance_test)
     if train_ratio_used < 0.99999:
-        fnOut = open('../../03.Results/6features/PanCancer/PanCancer_' + LLRmodelNA + '_TrainSize' + str(train_sample_size_used)
+        fnOut = open('../03.Results/6features/PanCancer/PanCancer_' + LLRmodelNA + '_TrainSize' + str(train_sample_size_used)
                      + '_10k_ParamCalculate.txt', 'w', buffering=1)
     else:
-        fnOut = open('../../03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
+        fnOut = open('../03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
                      buffering=1)
     for i in range(5):
         LLR_params10000[i] = list(zip(*LLR_params10000[i]))

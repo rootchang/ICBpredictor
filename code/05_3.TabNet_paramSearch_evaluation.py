@@ -121,7 +121,7 @@ if __name__ == "__main__":
                       'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'PDL1_TPS(%)']
         xy_colNAs = featuresNA + [phenoNA] + ['CancerType']
 
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowell_Train0 = dataChowell_Train0[xy_colNAs]
     dataChowell_Train = copy.deepcopy(dataChowell_Train0)
@@ -240,11 +240,11 @@ if __name__ == "__main__":
 
     elif task == 'ev': # paramSearch
         if cancer_type == 'NSCLC':
-            fnOut = '../../03.Results/16features/NSCLC/TabNet_evaluation_2000R5CV_result_NSCLC.txt'
+            fnOut = '../03.Results/16features/NSCLC/TabNet_evaluation_2000R5CV_result_NSCLC.txt'
             params = {'clip_value': 2.0, 'gamma': 2, 'lambda_sparse': 0.001, 'momentum': 0.3,
                       'n_a': 24, 'n_d': 24, 'n_independent': 2, 'n_shared': 2, 'n_steps': 3} # AUC_max = 0.826,
         elif cancer_type == 'Pan':
-            fnOut = '../../03.Results/16features/PanCancer/TabNet_evaluation_2000R5CV_result.txt'
+            fnOut = '../03.Results/16features/PanCancer/TabNet_evaluation_2000R5CV_result.txt'
             params = {'clip_value': 2.0, 'gamma': 1.5, 'lambda_sparse': 0.0001, 'momentum': 0.5, 'n_a': 32, 'n_d': 32,
                       'n_independent': 2, 'n_shared': 2, 'n_steps': 5}  # AUC_max = 0.744,
         fhOut = open(fnOut,'w')

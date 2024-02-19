@@ -5,18 +5,20 @@
 #Run command, e.g.: python 12.Formula_LORIS.py LLR6_pan
 ###############################################################################################
 
-
+import sys
 import numpy as np
 
 if __name__ == "__main__":
-    model = 'LLR6_pan' # 'LLR6_pan'  'LLR6_NSCLC'
+    model = sys.argv[1] # 'LLR6_pan'  'LLR6_NSCLC'
 
     ########################## Order of features ##########################
-    # featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
-    #               'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
-    #               'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-    #               'CancerType14', 'CancerType15', 'CancerType16'] # pan-cancer feature order
-    # featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] # NSCLC feature order
+    if model == "LLR6_pan":
+        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+                      'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
+                      'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
+                      'CancerType14', 'CancerType15', 'CancerType16'] # pan-cancer feature order
+    else:
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] # NSCLC feature order
 
     ###################### Read in LLRx model params ######################
     if model == 'LLR6_pan':
@@ -40,6 +42,9 @@ if __name__ == "__main__":
     clf_intercept_ = np.array(params_dict['LLR_intercept'])
 
     coef_list = params_dict['LLR_coef']/scaler_scale_
-    print('merged coef: ', [round(c,4) for c in coef_list])
+    coef_list = [round(c,4) for c in coef_list]
+    coef_tuple = list(zip(featuresNA, coef_list))
+    print('Coef.: ', coef_tuple)
+
     interc = -sum(params_dict['LLR_coef']*scaler_mean_/scaler_scale_) + params_dict['LLR_intercept'][0]
-    print('merge intercept: ', round(interc,4))
+    print('Intercept: ', round(interc,4))

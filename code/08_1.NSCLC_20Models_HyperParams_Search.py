@@ -39,14 +39,14 @@ if __name__ == "__main__":
     randomSearchNumber = 10000
 
     phenoNA = 'Response'
-    model_hyperParas_fn = '../../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
+    model_hyperParas_fn = '../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
         Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     if MLM not in ['RF6']:
         featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI',
                       'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
     else:
         featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
     data_train = pd.concat([data_train1,data_train2],axis=0)

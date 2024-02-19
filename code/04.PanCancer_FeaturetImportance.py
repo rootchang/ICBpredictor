@@ -1,6 +1,6 @@
 ###############################################################################################
 #Aim: Feature importance
-#Description: To make barplot showing feature importance from LR8 and LR6 models (Extended Data Fig. 2).
+#Description: To make barplot showing feature importance from LR8 and LR6 models (Supplementary Fig. 1).
 #             Also, get the optimal hyper-parameters of the LLR6 and LR5noTMB models.
 #
 #Run command, e.g.: python 04.PanCancer_FeaturetImportance.py LR8
@@ -35,7 +35,7 @@ elif LRmodelNA == 'LR5noTMB':
 xy_colNAs = featuresNA + [phenoNA]
 
 print('Raw data processing ...')
-dataChowell_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+dataChowell_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
 dataChowell_Train = pd.read_excel(dataChowell_fn, sheet_name='Chowell2015-2017', index_col=0)
 dataChowell_Train = dataChowell_Train[xy_colNAs]
 
@@ -90,8 +90,12 @@ sorted_idx = np.argsort(feature_coefs_abs)
 coefs = coefs[sorted_idx]
 feature_coefs_abs = feature_coefs_abs[sorted_idx]
 feature_NAs = np.array(feature_NAs)[sorted_idx]
+
+df = pd.DataFrame({'Feature': feature_NAs, 'Importance': feature_coefs_abs})
+df.to_csv('../03.Results/source_data_sfig01.csv', index=False)
+
 pos = np.arange(sorted_idx.shape[0]) + .5
-figOut = '../../03.Results/PanCancer_FeaturetImportance_'+LRmodelNA+'.pdf'
+figOut = '../03.Results/PanCancer_FeaturetImportance_'+LRmodelNA+'.pdf'
 featfig = plt.figure(figsize=(3, 3))
 featax = featfig.add_subplot(1, 1, 1)
 featfig.subplots_adjust(left=0.5, bottom=0.15, right=0.95, top=0.98, wspace=0.45, hspace=0.35)

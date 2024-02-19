@@ -3,7 +3,7 @@
 #Description: Multiple metric comparison between LLR6 vs. RF6 vs. TMB on training and multiple test sets. Specifically
 #             1) Models on all patients
 #             2) Models on non-NSCLC patients
-#             (Fig. 2a,c; Extended Data Fig. 4, 12a).
+#             (Fig. 2a,c; Extended Data Fig. 6a; Supplementary Fig. 2).
 #Run command, e.g.: python 06_1.PanCancer_LLR6_RF6_TMB_multiMetric_compare.py all
 ###############################################################################################
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
                  'CancerType14', 'CancerType15', 'CancerType16'] + ['CancerType_grouped'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)  # Chowell2018
     dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)  # Morris_new
@@ -117,8 +117,6 @@ if __name__ == "__main__":
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
-
-    dataALL = [c.loc[c['Chemo_before_IO'] == 1, :] for c in dataALL]
 
     # truncate TMB
     TMB_upper = 50
@@ -183,7 +181,7 @@ if __name__ == "__main__":
     OddsRatio_TMB = []
 
     ###################### Read in LLRx model params ######################
-    fnIn = '../../03.Results/6features/PanCancer/PanCancer_'+model_type+LLRmodelNA+'_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_'+model_type+LLRmodelNA+'_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -212,13 +210,13 @@ if __name__ == "__main__":
     clf.intercept_ = np.array(params_dict['LLR_intercept'])
 
     print('LLRx_meanParams10000:')
-    fnOut = '../../03.Results/PanCancer_'+ cancer_type + '_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
+    fnOut = '../03.Results/PanCancer_'+ cancer_type + '_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
     for i in range(len(x_test_scaled_list)):
         y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
         y_LLR6pred_test_list.append(y_pred_test)
         dataALL[i][LLRmodelNA] = y_pred_test
-        dataALL[i].to_csv('../../03.Results/PanCancermodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('../03.Results/PanCancermodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -258,13 +256,13 @@ if __name__ == "__main__":
     clf = RandomForestClassifier(random_state=randomSeed, n_jobs=CPU_num, **params).fit(x_test_RF6_list[0], y_test_list[0])
 
     print('RF6:')
-    fnOut = '../../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
     for i in range(len(x_test_RF6_list)):
         y_pred_test = clf.predict_proba(x_test_RF6_list[i])[:, 1]
         y_RF6pred_test_list.append(y_pred_test)
         dataALL[i][modelNA] = y_pred_test
-        dataALL[i].to_csv('../../03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('../03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -302,13 +300,13 @@ if __name__ == "__main__":
     modelNA = 'TMB' # TMB NLR Albumin Age
 
     print(modelNA+':')
-    fnOut = '../../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
     for i in range(len(x_test_RF6_list)):
         y_pred_test = x_test_RF6_list[i][modelNA]
         y_TMBpred_test_list.append(y_pred_test)
         dataALL[i][modelNA] = y_pred_test
-        dataALL[i].to_csv('../../03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('../03.Results/PanCancermodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -343,11 +341,9 @@ if __name__ == "__main__":
         OddsRatio_TMB.append(OddsRatio)
 
 
-    ############################## Plot ##############################
+    ############################## Plot ROC curves ##############################
     textSize = 8
-
-    ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_ROC_'+cancer_type+'.pdf'
+    output_fig1 = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_ROC_'+cancer_type+'.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
@@ -398,10 +394,43 @@ if __name__ == "__main__":
 
 
     ############# Plot metrics barplot ##############
-    print('LLR6 odds ratio: ', [round(c,2) for c in OddsRatio_LLRx])
-    print('RF6 odds ratio: ', [round(c,2) for c in OddsRatio_RF6])
-    print('TMB odds ratio: ', [round(c,2) for c in OddsRatio_TMB])
-    output_fig_fn = '../../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_MultiMetric_'+cancer_type+'.pdf'
+    print('LLR6_AUPRC', ' '.join([str(c) for c in AUPRC_LLRx]))
+    print('RF6_AUPRC', ' '.join([str(c) for c in AUPRC_RF6]))
+    print('TMB_AUPRC', ' '.join([str(c) for c in AUPRC_TMB]))
+
+    print('LLR6_odds_ratio', ' '.join([str(c) for c in OddsRatio_LLRx]))
+    print('RF6_odds_ratio', ' '.join([str(c) for c in OddsRatio_RF6]))
+    print('TMB_odds_ratio', ' '.join([str(c) for c in OddsRatio_TMB]))
+
+    print('LLR6_Accuracy', ' '.join([str(c) for c in Accuracy_LLRx]))
+    print('RF6_Accuracy', ' '.join([str(c) for c in Accuracy_RF6]))
+    print('TMB_Accuracy', ' '.join([str(c) for c in Accuracy_TMB]))
+
+    print('LLR6_F1', ' '.join([str(c) for c in F1_LLRx]))
+    print('RF6_F1', ' '.join([str(c) for c in F1_RF6]))
+    print('TMB_F1', ' '.join([str(c) for c in F1_TMB]))
+
+    print('LLR6_PPV', ' '.join([str(c) for c in PPV_LLRx]))
+    print('RF6_PPV', ' '.join([str(c) for c in PPV_RF6]))
+    print('TMB_PPV', ' '.join([str(c) for c in PPV_TMB]))
+
+    print('LLR6_NPV', ' '.join([str(c) for c in NPV_LLRx]))
+    print('RF6_NPV', ' '.join([str(c) for c in NPV_RF6]))
+    print('TMB_NPV', ' '.join([str(c) for c in NPV_TMB]))
+
+    print('LLR6_Specificity', ' '.join([str(c) for c in Specificity_LLRx]))
+    print('RF6_Specificity', ' '.join([str(c) for c in Specificity_RF6]))
+    print('TMB_Specificity', ' '.join([str(c) for c in Specificity_TMB]))
+
+    print('LLR6_Sensitivity', ' '.join([str(c) for c in Sensitivity_LLRx]))
+    print('RF6_Sensitivity', ' '.join([str(c) for c in Sensitivity_RF6]))
+    print('TMB_Sensitivity', ' '.join([str(c) for c in Sensitivity_TMB]))
+
+
+
+
+
+    output_fig_fn = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_MultiMetric_'+cancer_type+'.pdf'
     ax1 = [0] * 8
     fig1, ((ax1[0], ax1[1]), (ax1[2], ax1[3]), (ax1[4], ax1[5]), (ax1[6], ax1[7])) = plt.subplots(4, 2, figsize=(6.5, 6.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.55)

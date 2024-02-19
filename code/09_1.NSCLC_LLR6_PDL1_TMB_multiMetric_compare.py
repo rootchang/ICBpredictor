@@ -81,7 +81,7 @@ if __name__ == "__main__":
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
+    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
     dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
     dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
     dataChowell = pd.concat([dataChowellTrain,dataChowellTest],axis=0)
@@ -162,9 +162,9 @@ if __name__ == "__main__":
     OddsRatio_TMB = []
 
     ###################### Read in LLR model params ######################
-    fnIn = '../../03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt'
+    fnIn = '../03.Results/16features/NSCLC/NSCLC_'+LLRmodelNA+'_10k_ParamCalculate.txt'
     if LLRmodelNA == 'LLR6Pan':
-        fnIn = '../../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
+        fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn,'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -189,12 +189,12 @@ if __name__ == "__main__":
     clf.intercept_ = np.array(params_dict['LLR_intercept'])
 
     print('LLR6_meanParams10000:')
-    fnOut = '../../03.Results/NSCLC_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
+    fnOut = '../03.Results/NSCLC_' + LLRmodelNA + '_Scaler(' + 'StandardScaler' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
     for i in range(len(x_test_scaled_list)):
         y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
         dataALL[i][LLRmodelNA] = y_pred_test
-        dataALL[i].to_csv('../../03.Results/NSCLCmodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('../03.Results/NSCLCmodel_'+LLRmodelNA+'_Dataset'+str(i+1)+'.csv', index=True)
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -230,12 +230,12 @@ if __name__ == "__main__":
     modelNA = 'PDL1'
 
     print('PDL1:')
-    fnOut = '../../03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '../03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
     for i in range(len(PDL1_test_list)):
         y_pred_test = PDL1_test_list[i]['PDL1_TPS(%)']
         dataALL[i]['PDL1_TPS(%)'] = y_pred_test
-        dataALL[i].to_csv('../../03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('../03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -271,12 +271,12 @@ if __name__ == "__main__":
     modelNA = 'TMB' # TMB NLR Albumin Age
 
     print(modelNA+':')
-    fnOut = '../../03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
+    fnOut = '../03.Results/NSCLC_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
     dataALL[0].to_excel(fnOut, sheet_name='0')
     for i in range(len(TMB_test_list)):
         y_pred_test = TMB_test_list[i][modelNA]
         dataALL[i][modelNA] = y_pred_test
-        dataALL[i].to_csv('../../03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
+        dataALL[i].to_csv('../03.Results/NSCLCmodel_'+modelNA+'_Dataset'+str(i+1)+'.csv', index=True)
         AUC_test, score_test = AUC_calculator(y_test_list[i], y_pred_test)
         print('   Dataset %d: %5.3f (n=%d) %8.3f' % (i+1, AUC_test, len(y_pred_test), score_test))
 
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     textSize = 8
 
     ############# Plot ROC curves ##############
-    output_fig1 = '../../03.Results/'+LLRmodelNA+'_PDL1_TMB_ROC_compare_NSCLC.pdf'
+    output_fig1 = '../03.Results/'+LLRmodelNA+'_PDL1_TMB_ROC_compare_NSCLC.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
@@ -369,7 +369,7 @@ if __name__ == "__main__":
 
 
     ############# Plot PRC curves ##############
-    output_fig1 = '../../03.Results/'+LLRmodelNA+'_PDL1_TMB_PRC_compare_NSCLC.pdf'
+    output_fig1 = '../03.Results/'+LLRmodelNA+'_PDL1_TMB_PRC_compare_NSCLC.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
@@ -408,11 +408,12 @@ if __name__ == "__main__":
     fig1.savefig(output_fig1)
     plt.close()
 
-    print('LLR6 odds ratio: ', OddsRatio_LLR6)
-    print('PDL1 odds ratio: ', OddsRatio_PDL1)
-    print('TMB odds ratio: ', OddsRatio_TMB)
+    print('LLR6_odds_ratio', ' '.join([str(c) for c in OddsRatio_LLR6]))
+    print('PDL1_odds_ratio', ' '.join([str(c) for c in OddsRatio_PDL1]))
+    print('TMB_odds_ratio', ' '.join([str(c) for c in OddsRatio_TMB]))
+
     ############# Plot metrics barplot ##############
-    output_fig_fn = '../../03.Results/'+LLRmodelNA+'_MultipleMetricComparison_NSCLC.pdf'
+    output_fig_fn = '../03.Results/'+LLRmodelNA+'_MultipleMetricComparison_NSCLC.pdf'
     plt.figure(figsize=(6.5, 4.5))
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1]), (ax1[2], ax1[3]), (ax1[4], ax1[5])) = plt.subplots(3, 2, figsize=(4.1, 6))
