@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Machine learning model evaluation result
 #Description: Get statistical result of machine learning model performance from the 2000-repeated 5-fold cross
-# validation (Supplementary Tables 3,4).
+# validation (Supplementary Tables 4,5).
 #
 #Run command: python 08_3.NSCLC_20Models_evaluation_stat.py
 ###############################################################################################

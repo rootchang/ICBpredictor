@@ -42,6 +42,8 @@ data_all = data_all_raw[all_features]
 continuous_features = ['TMB', 'PDL1_TPS(%)', 'FCNA','HED', 'BMI', 'HGB', 'Albumin', 'NLR', 'Platelets', 'Age']
 data_continuous_features = data_all_raw[continuous_features]
 
+print(data_continuous_features.shape)
+
 corr_out = data_continuous_features.corr(method='spearman', min_periods=1)
 # set column and row names
 corr_out.columns = data_continuous_features.columns

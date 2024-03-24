@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: NSCLC-specific LLR6 vs. LLR2 comparison
 #Description: AUC comparison between NSCLC-specific LLR6 vs. LLR2 on training and multiple test sets.
-#             (Supplementary Fig. 7a)
+#             (Supplementary Fig. 6a)
 #Run command: python 09_4.NSCLC_LLR6_vs_LLR2_ROC_AUC.py
 ###############################################################################################
 

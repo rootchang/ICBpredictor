@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: NSCLC-specific LLR6 vs. Pan-cancer LLR6 comparison
 #Description: AUC comparison between NSCLC-specific LLR6 vs. Pan-cancer LLR6 on training and multiple test sets.
-#             (Extended Data Fig. 5a)
+#             (Extended Data Fig. 6a)
 #Run command, e.g.: python 09_3.NSCLC_vs_PanCancer_LLR6_ROC_AUC.py
 ###############################################################################################
 

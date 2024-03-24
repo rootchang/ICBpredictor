@@ -1,6 +1,6 @@
 ###############################################################################################
 Aim: Kaplan-Meier analysis of PFS/OS in individual cancers
-Description: To plot Kaplan-Meier curves of PFS/OS in individual cancers of merged MSK cohorts (Supplementary Figs. 4,5)
+Description: To plot Kaplan-Meier curves of PFS/OS in individual cancers of merged MSK cohorts (Extended Data Fig. 4; Supplementary Fig. 4)
 ###############################################################################################
 
 

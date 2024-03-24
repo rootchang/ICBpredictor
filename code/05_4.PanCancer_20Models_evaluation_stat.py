@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Machine learning model evaluation result
 #Description: Get statistical result of machine learning model performance from the 2000-repeated 5-fold cross
-# validation (Extended Data Table 1; Supplementary Table 1).
+# validation (Supplementary Tables 1,2).
 #
 #Run command: python 05_4.PanCancer_20Models_evaluation_stat.py
 ###############################################################################################

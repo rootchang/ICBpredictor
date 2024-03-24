@@ -1,7 +1,7 @@
 ###############################################################################################
-#Aim: Pan-cancer LLR6 vs. LLR5(without systemic therapy history term) comparison
+#Aim: Pan-cancer LLR6 vs. LLR5 (without systemic therapy history term) comparison
 #Description: AUC comparison between LLR6 vs. LLR5 on training and multiple test sets.
-#             (Extended Data Fig. 9a).
+#             (Extended Data Fig. 10a).
 #Run command, e.g.: python 06_4.PanCancer_LLR6_vs_LLR5noChemo_ROC_AUC.py
 ###############################################################################################
 

@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Performance of pan-cancer LLR6 on MSK-ICB cohort vs MSK-nonICB cohort
 #Description: Comparison of ROC / AUC of pan-cancer LR5noTMB on MSK-ICB cohort vs MSK-nonICB cohort.
-#             (Supplementary Fig. 6)
+#             (Supplementary Fig. 5)
 #Run command: python 07_4.PanCancer_LR5noTMB_LORIS_ROC_AUC_nonICB_vs_ICB_OS.py
 ###############################################################################################
 

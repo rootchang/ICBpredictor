@@ -23,7 +23,9 @@ from sklearn.utils import resample
 
 plt.rcParams.update({'font.size': 10})
 plt.rcParams["font.family"] = "Arial"
-palette = sns.color_palette("deep")
+palette = ["#377EB8", "#FF7F00", "#4D9943", "#E7BA52", "#999999", "#F7CAC9"]
+sns.set_palette(palette)
+#palette = sns.color_palette("deep")
 
 
 def AUC_calculator(y, y_pred):

@@ -1,7 +1,7 @@
 ###############################################################################################
-#Aim: Pan-cancer LLR6 vs. LLR6(remove cancer-type term) comparison
+#Aim: Pan-cancer LLR6 vs. LLR6 (remove cancer-type term) comparison
 #Description: AUC comparison between LLR6 vs. LLR6(remove cancer-type term) on training and multiple test sets.
-#             (Extended Data Fig. 8).
+#             (Supplementary Fig. 8).
 #Run command: python 06_3.PanCancer_LLR6_vs_LLR6noCancerTerm_ROC_AUC.py
 ###############################################################################################
 

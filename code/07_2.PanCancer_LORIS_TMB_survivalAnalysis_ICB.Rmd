@@ -1,6 +1,6 @@
 ###############################################################################################
 Aim: Pan-cancer survival analysis in ICB test cohort
-Description: To study LORIS predictive power in merged Chowell et al. & MSK1 cohorts (Fig. 3, 4c,d; Extended Data Figs. 3, 4, 7, 8c,d; Supplementary Figs. 3)
+Description: To study LORIS predictive power in merged Chowell et al. & MSK1 cohorts (Figs. 3, 4c,d; Extended Data Figs. 3, 5, 8, 9c,d; Supplementary Fig. 3)
 (1) K-M survival curves for LORIS-high/TMB-high vs. LORIS-high/TMB-low vs. ... groups
 (2) Multi-variable hazard ratio forest plot in individual cancers
 (3) 0.5-,1-,2-,3-,4-,5-year PFS/OS in individual cancers

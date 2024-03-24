@@ -3,7 +3,7 @@
 #Description: Relationship between LORIS or TMB score vs. ICB objective response odds
 #             1) on all patients
 #             2) on non-NSCLC patients
-#             (Fig. 4a,b; Extended Data Fig. 8a,b).
+#             (Fig. 4a,b; Extended Data Fig. 9a,b).
 #Run command, e.g.: python 07_1.PanCancer_LORIS_TMB_vs_resProb_curve.py PanCancer_all
 ###############################################################################################
 

@@ -1,7 +1,7 @@
 ###############################################################################################
-#Aim: NSCLC-specific LLR6 vs. LLR5 comparison
+#Aim: NSCLC-specific LLR6 vs. LLR5 (without systemic therapy history term) comparison
 #Description: AUC comparison between NSCLC-specific LLR6 vs. LLR5 on training and multiple test sets.
-#             (Extended Data Fig. 9b).
+#             (Extended Data Fig. 10b).
 #Run command: python 09_5.NSCLC_LLR6_vs_LLR5noChemo_ROC_AUC.py
 ###############################################################################################
 

@@ -2,7 +2,7 @@
 Aim: Predict survival of NSCLC patients using different models
 Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
 LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
-(Fig. 6d,e; Extended Data Fig. 5b,c; Supplementary Fig. 7b,c)
+(Fig. 6d,e; Extended Data Fig. 6b,c; Supplementary Fig. 6b,c)
 ###############################################################################################
 
 
