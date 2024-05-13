@@ -2,7 +2,7 @@
 
 ---
 
-This is a repository of scripts for reproducing the paper titled "LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic, and genomic features" by Chang et al.
+This is a repository of scripts for reproducing the paper titled "LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic, and genomic features" by Chang et al. (Nature Cancer 2024)
 
 <p align="center">
   <img src="./images/Fig1.jpg" width = "1000" alt="method" align=center />
@@ -89,11 +89,11 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 `06_3.PanCancer_LLR6_vs_LLR6noCancerTerm_ROC_AUC.py`
 
-`06_4.PanCancer_LLR6_vs_LLR5noChemo_ROC_AUC.py`
+`06_4.PanCancer_LLR6_vs_LLR5noPSTH_ROC_AUC.py`
 
 `06_5.PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.py`
 
-### 7. Pan-cancer prediction of patient survival following ICB or non-ICB treatments by LLR6, monotonic relationship between LORIS and patient ICB response and survival
+### 7. Pan-cancer prediction of patient survival following ICB or non-ICB treatments by LLR6; monotonic relationship between LORIS and patient ICB response and survival
 
 `07_1.PanCancer_LORIS_TMB_vs_resProb_curve.py`
 
@@ -131,7 +131,7 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 `09_4.NSCLC_LLR6_vs_LLR2_ROC_AUC.py`
 
-`09_5.NSCLC_LLR6_vs_LLR5noChemo_ROC_AUC.py`
+`09_5.NSCLC_LLR6_vs_LLR5noPSTH_ROC_AUC.py`
 
 ### 10. Hazard ratio prediction of patient survival following ICB by NSCLC-specific LLR6
 
@@ -149,9 +149,7 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 
 ## Citation
-Robust prediction of patient outcomes with immune checkpoint blockade therapy for cancer using common clinical, pathologic, and genomic features
-Tian-Gen Chang, Yingying Cao, Hannah J. Sfreddo, Saugato Rahman Dhruba, Se-Hoon Lee, Cristina Valero, Seong-Keun Yoo, Diego Chowell, Luc G. T. Morris, Eytan Ruppin
-bioRxiv 2023.07.04.547697; [doi: 10.1101/2023.07.04.547697](https://doi.org/10.1101/2023.07.04.547697)
+Tian-Gen Chang, Yingying Cao, Hannah J. Sfreddo, Saugato Rahman Dhruba, Se-Hoon Lee, Cristina Valero, Seong-Keun Yoo, Diego Chowell, Luc G. T. Morris, Eytan Ruppin. *LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic, and genomic features.* Nature Cancer. 2024.
 
 
 ## Contact

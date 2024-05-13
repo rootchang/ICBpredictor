@@ -1,12 +1,13 @@
 ###############################################################################################
-#Aim: NSCLC-specific LLR6 vs. LLR5 (without systemic therapy history term) comparison
-#Description: AUC comparison between NSCLC-specific LLR6 vs. LLR5 on training and multiple test sets.
-#             (Extended Data Fig. 10b).
-#Run command: python 09_5.NSCLC_LLR6_vs_LLR5noChemo_ROC_AUC.py
+#Aim: Pan-cancer LLR6 vs. LLR5 (without systemic therapy history term) comparison
+#Description: AUC comparison between LLR6 vs. LLR5 on training and multiple test sets.
+#             (Extended Data Fig. 10a).
+#Run command, e.g.: python 06_4.PanCancer_LLR6_vs_LLR5noPSTH_ROC_AUC.py
 ###############################################################################################
 
 
 import sys
+import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,15 +29,12 @@ palette = sns.color_palette("deep")
 def delong_test(y_true, y_pred1, y_pred2):
     n1 = len(y_pred1)
     n2 = len(y_pred2)
-    # Compute AUCs
     auc1 = roc_auc_score(y_true, y_pred1)
     auc2 = roc_auc_score(y_true, y_pred2)
-    # Compute Z statistic
     Q1 = auc1 * (1 - auc1)
     Q2 = auc2 * (1 - auc2)
     var = (Q1 / n1) + (Q2 / n2)
     Z_statistic = (auc1 - auc2) / np.sqrt(var)
-    # Compute p-value
     p_value = 2.0 * (1 - norm.cdf(abs(Z_statistic)))
     return p_value
 
@@ -61,33 +59,49 @@ def AUC_with95CI_calculator(y, y_pred):
 
 
 if __name__ == "__main__":
+    start_time = time.time()
 
     ########################## Read in data ##########################
     phenoNA = 'Response'
-    featuresNA_LLR6 = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    featuresNA_LLR5 = ['TMB', 'PDL1_TPS(%)', 'Albumin', 'NLR', 'Age']
-    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] + [phenoNA]
+    cancer_type = 'all'
+    model_type = ''
+    chemo_type = 'all'
+    featuresNA_LLR6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
+                      'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
+                      'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
+                      'CancerType14', 'CancerType15', 'CancerType16']
+    featuresNA_LLR5 = ['TMB', 'Albumin', 'NLR', 'Age', 'CancerType1',
+                      'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
+                      'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
+                      'CancerType14', 'CancerType15', 'CancerType16']  # noPSTH
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
+                 'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
+                 'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
+                 'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
-    dataChowell = pd.concat([dataChowellTrain,dataChowellTest],axis=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)
+    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
+    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
 
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)
-    dataLee = pd.read_excel(dataALL_fn, sheet_name='Lee_NSCLC', index_col=0)
+    dataALL = [dataChowellTrain, dataChowellTest, dataMSK1, dataMSK12, dataKato, dataPradat]
 
-    dataVanguri = pd.read_excel(dataALL_fn, sheet_name='Vanguri_NSCLC_all', index_col=0)
-    dataRavi = pd.read_excel(dataALL_fn, sheet_name='Ravi_NSCLC', index_col=0)
-    dataRavi['Albumin'] = 3.8  # impute values for the LLR6 model
-    dataRavi['NLR'] = 6.9 # impute values for the LLR6 model
-
-    dataALL = [dataChowell, dataMorris_new, dataLee, dataVanguri, dataRavi]
+    if cancer_type == 'nonNSCLC':
+        dataALL = [c.loc[c['CancerType11']==0,:] for c in dataALL]
 
     for i in range(len(dataALL)):
-        dataALL[i] = dataALL[i].loc[dataALL[i]['CancerType']=='NSCLC',]
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
+
+    if chemo_type == 1:
+        dataALL = [c.loc[c['Systemic_therapy_history'] == 1, :] for c in dataALL]
+    elif chemo_type == 0:
+        dataALL[-2] = dataALL[-1]
+        dataALL = [c.loc[c['Systemic_therapy_history'] == 0, :] for c in dataALL]
 
     # truncate TMB
     TMB_upper = 50
@@ -122,33 +136,9 @@ if __name__ == "__main__":
 
     y_LLR6pred_test_list = []
     y_LLR5pred_test_list = []
-    ###################### test LLR6 model performance ######################
-    fnIn = '../03.Results/16features/NSCLC/NSCLC_LLR6_10k_ParamCalculate.txt'
-    params_data = open(fnIn,'r').readlines()
-    params_dict = {}
-    for line in params_data:
-        if 'LLR_' not in line:
-            continue
-        words = line.strip().split('\t')
-        param_name = words[0]
-        params_val = [float(c) for c in words[1:]]
-        params_dict[param_name] = params_val
-    x_test_scaled_list = []
-    scaler_sd = StandardScaler()
-    scaler_sd.fit(x_test_LLR6_list[0][featuresNA_LLR6])
-    scaler_sd.mean_ = np.array(params_dict['LLR_mean'])
-    scaler_sd.scale_ = np.array(params_dict['LLR_scale'])
-    for c in x_test_LLR6_list:
-        x_test_scaled_list.append(pd.DataFrame(scaler_sd.transform(c[featuresNA_LLR6])))
-    clf = linear_model.LogisticRegression().fit(x_test_scaled_list[0], y_test_list[0])
-    clf.coef_ = np.array([params_dict['LLR_coef']])
-    clf.intercept_ = np.array(params_dict['LLR_intercept'])
-    for i in range(len(x_test_scaled_list)):
-        y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
-        y_LLR6pred_test_list.append(y_pred_test)
 
-    ###################### test LLR5 model performance ######################
-    fnIn = '../03.Results/16features/NSCLC/NSCLC_LLR5noChemo_10k_ParamCalculate.txt'
+    ###################### test LLR6 model performance ######################
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR6_10k_ParamCalculate.txt'
     params_data = open(fnIn, 'r').readlines()
     params_dict = {}
     for line in params_data:
@@ -160,11 +150,37 @@ if __name__ == "__main__":
         params_dict[param_name] = params_val
     x_test_scaled_list = []
     scaler_sd = StandardScaler()
-    scaler_sd.fit(x_test_LLR5_list[0][featuresNA_LLR5])
+    scaler_sd.fit(x_test_LLR6_list[0])
+    scaler_sd.mean_ = np.array(params_dict['LLR_mean'])
+    scaler_sd.scale_ = np.array(params_dict['LLR_scale'])
+    for c in x_test_LLR6_list:
+        x_test_scaled_list.append(pd.DataFrame(scaler_sd.transform(c)))
+    clf = linear_model.LogisticRegression().fit(x_test_scaled_list[0], y_test_list[0])
+    clf.coef_ = np.array([params_dict['LLR_coef']])
+    clf.intercept_ = np.array(params_dict['LLR_intercept'])
+    for i in range(len(x_test_scaled_list)):
+        y_pred_test = clf.predict_proba(x_test_scaled_list[i])[:, 1]
+        y_LLR6pred_test_list.append(y_pred_test)
+
+
+    ###################### test LLR5 model performance ######################
+    fnIn = '../03.Results/6features/PanCancer/PanCancer_LLR5noPSTH_10k_ParamCalculate.txt'
+    params_data = open(fnIn, 'r').readlines()
+    params_dict = {}
+    for line in params_data:
+        if 'LLR_' not in line:
+            continue
+        words = line.strip().split('\t')
+        param_name = words[0]
+        params_val = [float(c) for c in words[1:]]
+        params_dict[param_name] = params_val
+    x_test_scaled_list = []
+    scaler_sd = StandardScaler()
+    scaler_sd.fit(x_test_LLR5_list[0])
     scaler_sd.mean_ = np.array(params_dict['LLR_mean'])
     scaler_sd.scale_ = np.array(params_dict['LLR_scale'])
     for c in x_test_LLR5_list:
-        x_test_scaled_list.append(pd.DataFrame(scaler_sd.transform(c[featuresNA_LLR5])))
+        x_test_scaled_list.append(pd.DataFrame(scaler_sd.transform(c)))
     clf = linear_model.LogisticRegression().fit(x_test_scaled_list[0], y_test_list[0])
     clf.coef_ = np.array([params_dict['LLR_coef']])
     clf.intercept_ = np.array(params_dict['LLR_intercept'])
@@ -177,32 +193,16 @@ if __name__ == "__main__":
     for i in range(len(y_LLR6pred_test_list)):
         p1 = delong_test(y_test_list[i], y_LLR6pred_test_list[i], y_LLR5pred_test_list[i])
         pval_list.append(p1)
-        print('Dataset %d: LLR6 vs LLR5 p-val: %g' % (i + 1, p1))
-
-    ############################## save source data for figure ##############################
-    dataset_list = []
-    true_label_list = []
-    LLR6_pred_list = []
-    LLR5_pred_list = []
-    dataset_unique = ["Chowell et al.","MSK1","Shim et al.","Vanguri et al.","Ravi et al."]
-    for i in range(5):
-        LLR6_pred_list.extend(y_LLR6pred_test_list[i])
-        LLR5_pred_list.extend(y_LLR5pred_test_list[i])
-        true_label_list.extend(y_test_list[i])
-        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i]))
-    df = pd.DataFrame({"Dataset":dataset_list, "True_label":true_label_list, "LLR6_score":LLR6_pred_list, "LLR5_score":LLR5_pred_list})
-    df.to_csv('../03.Results/source_data_efig10b.csv', index=False)
-
+        print('Dataset %d: LLR6 vs LLR5 p-val: %g'%(i+1,p1))
 
     ############################## Plot ROC curves ##############################
     textSize = 8
-    output_fig1 = '../03.Results/LLR6_LLR5_compare_NSCLC.pdf'
+    output_fig1 = '../03.Results/PanCancer_LLR6_LLR5noPSTH_ROC_compare.pdf'
     ax1 = [0] * 6
     fig1, ((ax1[0], ax1[1], ax1[2]), (ax1[3], ax1[4], ax1[5])) = plt.subplots(2, 3, figsize=(6.5, 3.5))
     fig1.subplots_adjust(left=0.08, bottom=0.15, right=0.97, top=0.96, wspace=0.3, hspace=0.5)
-    fig1.delaxes(ax1[5])
 
-    for i in range(5):
+    for i in range(6):
         y_true = y_test_list[i]
         ###### LLR6 model
         y_pred = y_LLR6pred_test_list[i]
@@ -210,10 +210,9 @@ if __name__ == "__main__":
         AUC,_,AUC_05,AUC_95 = AUC_with95CI_calculator(y_true, y_pred)
         ax1[i].plot([0, 1], [0, 1], 'k', alpha=0.5, linestyle='--')
         if not i:
-            ax1[i].plot(fpr, tpr, color=palette[0], linestyle='-',
-                        label='LLR6 AUC: %.2f (%.2f, %.2f)' % (AUC, AUC_05, AUC_95))
+            ax1[i].plot(fpr, tpr, color= palette[0],linestyle='-', label='LLR6 AUC: %.2f (%.2f, %.2f)' % (AUC,AUC_05,AUC_95))
         else:
-            ax1[i].plot(fpr, tpr, color=palette[0], linestyle='-', label='%.2f (%.2f, %.2f)' % (AUC, AUC_05, AUC_95))
+            ax1[i].plot(fpr, tpr, color= palette[0],linestyle='-', label='%.2f (%.2f, %.2f)' % (AUC,AUC_05,AUC_95))
         ###### LLR5 model
         y_pred = y_LLR5pred_test_list[i]
         fpr, tpr, thresholds = roc_curve(y_true, y_pred)
@@ -225,10 +224,9 @@ if __name__ == "__main__":
                           labelspacing=0.2)
         else:
             ax1[i].plot(fpr, tpr, color=palette[1], linestyle='-', label='%.2f (%.2f, %.2f)' % (AUC, AUC_05, AUC_95))
-            ax1[i].legend(frameon=False, loc=(0.4, 0), prop={'size': textSize}, handlelength=1, handletextpad=0.1,
-                          labelspacing=0.2)
+            ax1[i].legend(frameon=False, loc=(0.4,0), prop={'size': textSize},handlelength=1,handletextpad=0.1,
+                      labelspacing = 0.2)
         ax1[i].text(0.05, 0.9, 'p = %.2f' % pval_list[i])
-
         ax1[i].set_xlim([-0.02, 1.02])
         ax1[i].set_ylim([-0.02, 1.02])
         ax1[i].set_yticks([0,0.5,1])
